@@ -3,7 +3,7 @@
 **Developer:** Engr Saad  
 **Email:** saad@triangeltech.com  
 **Website:** [https://engr-saad.com](https://engr-saad.com)  
-**LinkedIn:** [https://www.linkedin.com/in/engr-saad/](https://www.linkedin.com/in/engr-saad/)  
+**LinkedIn:** [https://www.linkedin.com/in/engr-saad/](https://www.linkedin.com/in/engrsaad2/)  
 **Facebook:** [https://www.facebook.com/Engr.Saad.2/](https://www.facebook.com/Engr.Saad.2/)  
 **Company:** [Triangle Technology](https://triangletech.com.bd/)  
 **WhatsApp:** [+8801810536303](https://wa.me/8801810536303)  
