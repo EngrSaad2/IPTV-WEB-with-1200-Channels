@@ -90,16 +90,37 @@
     }
 
     async function fetchPages(endpoint, extraParams = {}, pages = 3) {
+        const cacheKey = 'tmdb_' + endpoint + JSON.stringify(extraParams) + '_' + pages;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) return JSON.parse(cached);
+
         let all = [];
-        for (let page = 1; page <= pages; page++) {
-            try {
-                const data = await tmdbGet(endpoint, { page, ...extraParams });
-                all = all.concat(processResults(data.results || []));
-            } catch(e) { /* skip page */ }
-        }
-        // deduplicate
-        const seen = {};
-        return all.filter(m => seen[m.id] ? false : (seen[m.id] = true));
+        // Load page 1 first for speed
+        try {
+            const data = await tmdbGet(endpoint, { page: 1, ...extraParams });
+            all = processResults(data.results || []);
+        } catch(e) { /* skip */ }
+
+        const result = all;
+        sessionStorage.setItem(cacheKey, JSON.stringify(result));
+
+        // Load remaining pages in background
+        (async () => {
+            let more = [];
+            for (let page = 2; page <= pages; page++) {
+                try {
+                    const data = await tmdbGet(endpoint, { page, ...extraParams });
+                    more = more.concat(processResults(data.results || []));
+                } catch(e) { break; }
+            }
+            if (more.length > 0) {
+                const seen = {};
+                const full = result.concat(more).filter(m => seen[m.id] ? false : (seen[m.id] = true));
+                sessionStorage.setItem(cacheKey, JSON.stringify(full));
+            }
+        })();
+
+        return result;
     }
 
     // ---------- Genre / Category loaders ----------

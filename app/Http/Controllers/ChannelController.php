@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class ChannelController extends Controller
 {
-    private const FEED_URL = 'https://raw.githubusercontent.com/foridul422/IPTV-/main/channels.json';
+    private const FEED_URL = 'https://cdn.jsdelivr.net/gh/foridul422/IPTV-@main/channels.json';
     private const DEFAULT_FALLBACK_LOGO = 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770377900139.png';
 
     public function index(Request $request)
@@ -55,22 +55,19 @@ class ChannelController extends Controller
                 continue;
             }
 
-            // Skip duplicate channels if already added by custom lists
-            if ($this->isAlreadyAdded($all, $c['name'])) {
-                continue;
-            }
-
             $logo = $this->resolveLogoByName($c['name']);
             if ($logo === self::DEFAULT_FALLBACK_LOGO && !empty($c['logo']) && str_starts_with($c['logo'], 'http')) {
                 $logo = $c['logo'];
             }
 
-            $all[] = [
+            $newChannel = [
                 'name' => $c['name'],
                 'logo' => $logo,
                 'group' => $c['group'] ?? 'Sports',
                 'url' => $c['url']
             ];
+
+            $this->addOrUpgradeChannel($all, $newChannel);
         }
 
         return $this->filterByCategory($all, $category);
@@ -78,13 +75,38 @@ class ChannelController extends Controller
 
     private function isAlreadyAdded(array $list, string $name): bool
     {
-        $nameLower = strtolower(trim($name));
+        $nameNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($name));
         foreach ($list as $item) {
-            if (strtolower(trim($item['name'])) === $nameLower) {
+            $itemNameNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($item['name']));
+            if ($itemNameNormalized === $nameNormalized) {
                 return true;
             }
         }
         return false;
+    }
+
+    private function addOrUpgradeChannel(array &$list, array $newChannel): void
+    {
+        $newNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($newChannel['name']));
+        $newIsHttps = str_starts_with(strtolower($newChannel['url']), 'https');
+
+        foreach ($list as $index => $existing) {
+            $existingNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($existing['name']));
+            if ($existingNormalized === $newNormalized) {
+                $existingIsHttps = str_starts_with(strtolower($existing['url']), 'https');
+                
+                // Upgrade from HTTP to HTTPS if dynamic version is secure
+                if (!$existingIsHttps && $newIsHttps) {
+                    $list[$index]['url'] = $newChannel['url'];
+                    if (!empty($newChannel['logo']) && $newChannel['logo'] !== self::DEFAULT_FALLBACK_LOGO) {
+                        $list[$index]['logo'] = $newChannel['logo'];
+                    }
+                }
+                return;
+            }
+        }
+
+        $list[] = $newChannel;
     }
 
     private function filterByCategory(array $channels, string $category): array
@@ -401,7 +423,6 @@ class ChannelController extends Controller
     private function getFifaSportsChannels(): array
     {
         return [
-            ['name' => 'T Sports HD', 'logo' => 'https://s3.aynaott.com/storage/dbc585f70a60b9855b6e13a8ce4cb6f4', 'url' => 'http://198.195.239.50:8095/Tsports/index.m3u8', 'group' => 'Sports'],
             ['name' => 'B TV', 'logo' => 'https://s3.aynaott.com/storage/00da8a07fb26b2fb79359ee535e4c7bc', 'url' => 'https://tvsen6.aynaott.com/btvctg/index.m3u8?e=1779283747&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=9bca925fbdfe526b29d41ab7802348ec', 'group' => 'Sports'],
             ['name' => 'Somoy TV', 'logo' => 'https://s3.aynaott.com/storage/ece71c1163a377fbe2d93f9d28c34f60', 'url' => 'https://tvsen6.aynaott.com/somoytv/index.m3u8?e=1779283766&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=269246b8a31fb3a656624d71e10e447d', 'group' => 'Sports'],
             ['name' => 'beIN Sports', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],

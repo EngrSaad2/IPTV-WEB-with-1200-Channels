@@ -29,7 +29,7 @@ abstract class Controller
         try {
             $response = Http::withHeaders($headers)
                 ->withOptions($options)
-                ->timeout(10)
+                ->timeout(3)
                 ->get($url, $params);
             
             if ($response->successful()) {
@@ -38,22 +38,23 @@ abstract class Controller
         } catch (\Exception $e) {
             // Emergency fallback
             $fallbackOptions = [];
-            if ($resolveMode !== 'v6') {
+            if ($resolveMode === 'v6') {
+                $fallbackOptions['force_ip_resolve'] = 'v4';
+            } else {
                 $fallbackOptions['force_ip_resolve'] = 'v6';
             }
             try {
                 return Http::withHeaders($headers)
                     ->withOptions($fallbackOptions)
-                    ->timeout(10)
+                    ->timeout(3)
                     ->get($url, $params);
             } catch (\Exception $ex) {
-                // Ignore and fallthrough
+                // Return original response or rethrow
+                throw $ex;
             }
         }
 
-        return Http::withHeaders($headers)
-            ->timeout(10)
-            ->get($url, $params);
+        return $response;
     }
 }
 
