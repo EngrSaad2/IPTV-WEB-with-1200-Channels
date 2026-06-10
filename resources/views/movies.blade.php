@@ -33,7 +33,7 @@
 
 @section('scripts')
 <script>
-    const TMDB_TOKEN = "{{ env('TMDB_READ_TOKEN') }}";
+    const TMDB_TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZGI5ZTg4MGIwOGE5YzJjZDczZjg2OTQ2NDNkYmYxNyIsIm5iZiI6MTc4MDgzMzg4Mi40MjU5OTk5LCJzdWIiOiI2YTI1NWU1YWM4MmFkYWVkZDYxZTVjN2EiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fmB7AdXKUzs3n37Q7oU7arLaqX3TSfnkS1cfU_2SrPY";
     const TMDB_BASE  = 'https://api.themoviedb.org/3';
     const TMDB_IMG   = 'https://image.tmdb.org/t/p/w500';
     const TMDB_BACK  = 'https://image.tmdb.org/t/p/w780';
