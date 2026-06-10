@@ -16,17 +16,42 @@ function log_msg($msg) {
 // Authentication
 $secret = 'SaadDeploy2026@TV';
 
-$headers = getallheaders();
-$signature = $headers['X-Hub-Signature-256'] ?? '';
-$payload = file_get_contents('php://input');
+$headers = [];
+if (function_exists('getallheaders')) {
+    $rawHeaders = getallheaders();
+    if ($rawHeaders !== false) {
+        foreach ($rawHeaders as $name => $value) {
+            $headers[strtolower($name)] = $value;
+        }
+    }
+}
 
+$signature = $headers['x-hub-signature-256'] ?? '';
+if (empty($signature)) {
+    $signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
+}
+
+$payload = file_get_contents('php://input');
 $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
 
-if (!hash_equals($expected, $signature)) {
+if (empty($signature) || !hash_equals($expected, $signature)) {
     http_response_code(403);
-    log_msg('Error: Invalid signature');
+    
+    // Log headers for debugging signature issues
+    $logHeaders = [];
+    foreach ($_SERVER as $key => $val) {
+        if (strpos($key, 'HTTP_') === 0 || in_array($key, ['CONTENT_TYPE', 'REQUEST_METHOD'])) {
+            $logHeaders[$key] = $val;
+        }
+    }
+    log_msg('Error: Invalid signature. Expected: ' . $expected . ', Received: ' . $signature . '. Headers: ' . json_encode($logHeaders));
+    
     header('Content-Type: application/json');
-    exit(json_encode(['error' => 'Invalid signature']));
+    exit(json_encode([
+        'error' => 'Invalid signature',
+        'expected' => $expected,
+        'received' => $signature
+    ]));
 }
 
 log_msg('Webhook signature verified. Starting deployment...');
