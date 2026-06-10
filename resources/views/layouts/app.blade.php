@@ -90,8 +90,16 @@
 
     <!-- Core App Logic -->
     <script>
-        const APP_URL = "{{ url('/') }}";
-        const API_BASE = "{{ url('api') }}";
+        const rawAppUrl = "{{ url('/') }}";
+        const rawApiBase = "{{ url('api') }}";
+        
+        const APP_URL = (rawAppUrl.includes('localhost') && !window.location.hostname.includes('localhost'))
+            ? window.location.origin
+            : rawAppUrl;
+            
+        const API_BASE = (rawApiBase.includes('localhost') && !window.location.hostname.includes('localhost'))
+            ? window.location.origin + '/api'
+            : rawApiBase;
 
         // Load User Profile Settings
         document.addEventListener('DOMContentLoaded', () => {
