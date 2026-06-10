@@ -70,6 +70,8 @@ class ChannelController extends Controller
             $this->addOrUpgradeChannel($all, $newChannel);
         }
 
+        $all = $this->prioritizeSports($all);
+
         return $this->filterByCategory($all, $category);
     }
 
@@ -107,6 +109,28 @@ class ChannelController extends Controller
         }
 
         $list[] = $newChannel;
+    }
+
+    private function prioritizeSports(array $channels): array
+    {
+        $prioritized = [];
+        $tSports = null;
+        $others = [];
+
+        foreach ($channels as $item) {
+            $nameNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($item['name']));
+            if ($nameNormalized === 'tsportshd' && !$tSports) {
+                $tSports = $item;
+            } else {
+                $others[] = $item;
+            }
+        }
+
+        if ($tSports) {
+            $prioritized[] = $tSports;
+        }
+
+        return array_merge($prioritized, $others);
     }
 
     private function filterByCategory(array $channels, string $category): array
