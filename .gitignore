@@ -24,5 +24,6 @@ Homestead.yaml
 Thumbs.db
 *.zip
 DB/
-*.md
+web_migration_blueprint.md
+
 
