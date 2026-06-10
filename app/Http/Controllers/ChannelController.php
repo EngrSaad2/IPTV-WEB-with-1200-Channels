@@ -114,21 +114,40 @@ class ChannelController extends Controller
 
     private function prioritizeSports(array $channels): array
     {
-        $prioritized = [];
-        $tSports = null;
+        $prioritizedOrder = ['tsportshd', 'ptvsports', 'asportshd', 'asports', 'ddsports'];
+        
+        $matched = array_fill_keys($prioritizedOrder, null);
         $others = [];
 
         foreach ($channels as $item) {
             $nameNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($item['name']));
-            if ($nameNormalized === 'tsportshd' && !$tSports) {
-                $tSports = $item;
+            
+            if (array_key_exists($nameNormalized, $matched) && $matched[$nameNormalized] === null) {
+                $matched[$nameNormalized] = $item;
             } else {
                 $others[] = $item;
             }
         }
 
-        if ($tSports) {
-            $prioritized[] = $tSports;
+        $prioritized = [];
+        if ($matched['tsportshd']) {
+            $prioritized[] = $matched['tsportshd'];
+        }
+        if ($matched['ptvsports']) {
+            $prioritized[] = $matched['ptvsports'];
+        }
+        
+        if ($matched['asportshd']) {
+            $prioritized[] = $matched['asportshd'];
+            if ($matched['asports']) {
+                $others[] = $matched['asports'];
+            }
+        } elseif ($matched['asports']) {
+            $prioritized[] = $matched['asports'];
+        }
+        
+        if ($matched['ddsports']) {
+            $prioritized[] = $matched['ddsports'];
         }
 
         return array_merge($prioritized, $others);
