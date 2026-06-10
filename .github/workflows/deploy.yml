@@ -19,7 +19,7 @@ jobs:
           extensions: mbstring, xml, ctype, iconv, mysqlnd
 
       - name: Install Composer Dependencies
-        run: composer install --no-dev --prefer-dist --no-scripts --no-progress --non-interactive
+        run: composer install --no-dev --prefer-dist --no-scripts --no-progress --no-interaction
 
       - name: Deploy to Server via SSH/Rsync
         uses: easingthemes/ssh-deploy@v5.1.0
@@ -29,7 +29,8 @@ jobs:
           REMOTE_USER: ${{ secrets.SSH_USER }}
           REMOTE_PORT: ${{ secrets.SSH_PORT }}
           TARGET: "/home/u263680919/domains/triangletech.com.bd/public_html/tv.triangletech.com.bd"
-          SOURCE: "/"
-          ARGS: "-rlgoDzvO --delete"
+          SOURCE: "./"
+          ARGS: "-rtlzO --delete"
           EXCLUDE: "/.git/, /.github/, /node_modules/, /tests/, .env, *.zip, /DB/"
+
 
