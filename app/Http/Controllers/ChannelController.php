@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 
 class ChannelController extends Controller
 {
+    // Channel logic with secure stream prioritization
     private const FEED_URL = 'https://cdn.jsdelivr.net/gh/foridul422/IPTV-@main/channels.json';
     private const DEFAULT_FALLBACK_LOGO = 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770377900139.png';
 
