@@ -14,7 +14,35 @@ function log_msg($msg) {
 }
 
 // Authentication
-$secret = 'SaadDeploy2026@TV';
+function get_env_var($key, $default = '') {
+    $envPath = __DIR__ . '/../.env';
+    if (file_exists($envPath)) {
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (strpos($line, '#') === 0) continue;
+            if (strpos($line, '=') === false) continue;
+            list($name, $value) = explode('=', $line, 2);
+            if (trim($name) === $key) {
+                $value = trim($value);
+                if (preg_match('/^"(.+)"$/', $value, $matches)) {
+                    return $matches[1];
+                }
+                return $value;
+            }
+        }
+    }
+    return $default;
+}
+
+$secret = get_env_var('WEBHOOK_SECRET', '');
+
+if (empty($secret)) {
+    http_response_code(500);
+    log_msg('Error: WEBHOOK_SECRET is not configured in .env file.');
+    header('Content-Type: application/json');
+    exit(json_encode(['error' => 'Webhook secret not configured on server']));
+}
 
 $headers = [];
 if (function_exists('getallheaders')) {
