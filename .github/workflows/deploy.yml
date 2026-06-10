@@ -22,6 +22,7 @@ jobs:
         run: composer install --no-dev --prefer-dist --no-scripts --no-progress --no-interaction
 
       - name: Deploy to Server via SSH/Rsync
+        if: ${{ secrets.SSH_PRIVATE_KEY != '' && secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PORT != '' }}
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -33,4 +34,7 @@ jobs:
           ARGS: "-rtlzO --delete"
           EXCLUDE: "/.git/, /.github/, /node_modules/, /tests/, .env, *.zip, /DB/"
 
+      - name: Skip deploy when SSH secrets are missing
+        if: ${{ secrets.SSH_PRIVATE_KEY == '' || secrets.SSH_HOST == '' || secrets.SSH_USER == '' || secrets.SSH_PORT == '' }}
+        run: echo "Skipping deploy because one or more SSH deployment secrets are not configured."
 
