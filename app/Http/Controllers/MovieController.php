@@ -65,6 +65,7 @@ class MovieController extends Controller
         $cacheKey = 'tmdb_search_' . md5($query);
         $movies = Cache::remember($cacheKey, 600, function () use ($query) {
             $response = Http::withHeaders($this->getHeaders())
+                ->withOptions(['force_ip_resolve' => 'v6'])
                 ->timeout(10)
                 ->get(self::BASE_URL . '/search/movie', [
                     'query' => $query,
@@ -87,6 +88,7 @@ class MovieController extends Controller
         $cacheKey = 'tmdb_movie_detail_' . $movieId;
         $detail = Cache::remember($cacheKey, 3600, function () use ($movieId) {
             $response = Http::withHeaders($this->getHeaders())
+                ->withOptions(['force_ip_resolve' => 'v6'])
                 ->timeout(10)
                 ->get(self::BASE_URL . "/movie/{$movieId}", [
                     'append_to_response' => 'videos',
@@ -115,6 +117,7 @@ class MovieController extends Controller
 
                 // Fetch similar movies
                 $similarResponse = Http::withHeaders($this->getHeaders())
+                    ->withOptions(['force_ip_resolve' => 'v6'])
                     ->timeout(10)
                     ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
                         'language' => self::LANG,
@@ -164,6 +167,7 @@ class MovieController extends Controller
                     ], $extraParams);
 
                     $response = Http::withHeaders($this->getHeaders())
+                        ->withOptions(['force_ip_resolve' => 'v6'])
                         ->timeout(10)
                         ->get(self::BASE_URL . $endpoint, $params);
 
