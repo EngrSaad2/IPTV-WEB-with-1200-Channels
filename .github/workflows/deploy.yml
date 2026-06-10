@@ -9,13 +9,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd ~/tv.triangletech.com.bd/public_html
-            git pull origin main
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, mysqlnd
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --prefer-dist --no-scripts --no-progress --non-interactive
+
+      - name: Deploy to Server via SSH/Rsync
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          TARGET: "/home/u263680919/domains/triangletech.com.bd/public_html/tv.triangletech.com.bd"
+          SOURCE: "/"
+          ARGS: "-rlgoDzvO --delete"
+          EXCLUDE: "/.git/, /.github/, /node_modules/, /tests/, .env, *.zip, /DB/"
+
