@@ -48,7 +48,10 @@ jobs:
             git fetch origin
             git reset --hard origin/main
             composer install --no-dev --optimize-autoloader --no-interaction
-
+            php artisan migrate --force
+            php artisan db:seed --force
+            php artisan optimize:clear
+            php artisan optimize
 
       - name: Skip deploy when SSH secrets are missing
         if: ${{ steps.check_deploy_secrets.outputs.ready != 'true' }}
