@@ -275,19 +275,23 @@
             hls = new Hls({
                 enableWorker: true,
                 lowLatencyMode: true,
-                maxBufferLength: 30,
-                maxBufferSize: 60 * 1024 * 1024,
-                liveBackBufferLength: 10,
+                maxBufferLength: 10,
+                maxMaxBufferLength: 15,
+                maxBufferSize: 30 * 1024 * 1024,
+                liveBackBufferLength: 5,
+                liveSyncPosition: 3,
+                initialLiveManifestSize: 3,
+                liveDurationInfinity: true,
                 abrEwmaDefaultEstimate: 4000000, // Bias initial load estimate to 4 Mbps to favor HD
                 abrBandwidthFactor: 0.95,
                 abrBandwidthLimit: 0,
                 testBandwidth: true,
                 fragLoadPolicy: {
                     default: {
-                        maxTimeToFirstByteMs: 10000,
-                        maxLoadTimeMs: 20000,
-                        timeoutRetry: { maxNumRetry: 4, retryDelayMs: 1000, maxRetryDelayMs: 8000 },
-                        errorRetry: { maxNumRetry: 3, retryDelayMs: 2000, maxRetryDelayMs: 8000 }
+                        maxTimeToFirstByteMs: 5000,
+                        maxLoadTimeMs: 10000,
+                        timeoutRetry: { maxNumRetry: 4, retryDelayMs: 500, maxRetryDelayMs: 4000 },
+                        errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 4000 }
                     }
                 }
             });

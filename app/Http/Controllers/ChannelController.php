@@ -114,7 +114,16 @@ class ChannelController extends Controller
 
     private function prioritizeSports(array $channels): array
     {
-        $prioritizedOrder = ['tsportshd', 'ptvsports', 'asportshd', 'asports', 'ddsports'];
+        $prioritizedOrder = [
+            'tsportshd', 
+            'sportslegends', 
+            'flashguyshd', 
+            'sportsrange', 
+            'ptvsports', 
+            'asportshd', 
+            'asports', 
+            'ddsports'
+        ];
         
         $matched = array_fill_keys($prioritizedOrder, null);
         $others = [];
@@ -132,6 +141,15 @@ class ChannelController extends Controller
         $prioritized = [];
         if ($matched['tsportshd']) {
             $prioritized[] = $matched['tsportshd'];
+        }
+        if ($matched['sportslegends']) {
+            $prioritized[] = $matched['sportslegends'];
+        }
+        if ($matched['flashguyshd']) {
+            $prioritized[] = $matched['flashguyshd'];
+        }
+        if ($matched['sportsrange']) {
+            $prioritized[] = $matched['sportsrange'];
         }
         if ($matched['ptvsports']) {
             $prioritized[] = $matched['ptvsports'];
