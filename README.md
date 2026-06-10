@@ -1,4 +1,17 @@
+## 👨‍💻 Developer & Team Contacts
+
+* **Developer:** Engr Saad
+* **Company:** [Triangle Technology](https://triangletech.com.bd/)
+* **Email:** [saad@triangletech.com.bd](mailto:saad@triangletech.com.bd)
+* **Website:** [https://engr-saad.com](https://engr-saad.com)
+* **LinkedIn:** [engr-saad](https://www.linkedin.com/in/engrsaad2/)
+* **Facebook:** [Engr.Saad.2](https://www.facebook.com/Engr.Saad.2/)
+* **WhatsApp:** [+8801810536303](https://wa.me/8801810536303)
+
 # LiveTVweb - Premium IPTV Web Application & Movie Portal
+
+<img width="1891" height="895" alt="image" src="https://github.com/user-attachments/assets/b3f4f0c3-d917-454a-8aec-ab3443547a79" />
+
 
 LiveTVweb is a state-of-the-art, high-performance web application built to stream over 1200+ Live IPTV channels and offer an immersive movie portal. Migrated from an Android native codebase, it delivers an optimized, responsive, and secure streaming experience directly in modern web browsers.
 
@@ -99,12 +112,4 @@ This project includes a secure deployment script [deploy-webhook.php](file:///c:
 
 ---
 
-## 👨‍💻 Developer & Team Contacts
 
-* **Developer:** Engr Saad
-* **Company:** [Triangle Technology](https://triangletech.com.bd/)
-* **Email:** [saad@triangeltech.com](mailto:saad@triangeltech.com)
-* **Website:** [https://engr-saad.com](https://engr-saad.com)
-* **LinkedIn:** [engr-saad](https://www.linkedin.com/in/engr-saad/)
-* **Facebook:** [Engr.Saad.2](https://www.facebook.com/Engr.Saad.2/)
-* **WhatsApp:** [+8801810536303](https://wa.me/8801810536303)
