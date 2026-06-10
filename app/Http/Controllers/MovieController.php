@@ -64,14 +64,11 @@ class MovieController extends Controller
 
         $cacheKey = 'tmdb_search_' . md5($query);
         $movies = Cache::remember($cacheKey, 600, function () use ($query) {
-            $response = Http::withHeaders($this->getHeaders())
-                ->withOptions(['force_ip_resolve' => 'v6'])
-                ->timeout(10)
-                ->get(self::BASE_URL . '/search/movie', [
-                    'query' => $query,
-                    'language' => self::LANG,
-                    'page' => 1
-                ]);
+            $response = $this->adaptiveGet(self::BASE_URL . '/search/movie', [
+                'query' => $query,
+                'language' => self::LANG,
+                'page' => 1
+            ], $this->getHeaders());
 
             if ($response->successful()) {
                 $results = $response->json()['results'] ?? [];
@@ -87,13 +84,10 @@ class MovieController extends Controller
     {
         $cacheKey = 'tmdb_movie_detail_' . $movieId;
         $detail = Cache::remember($cacheKey, 3600, function () use ($movieId) {
-            $response = Http::withHeaders($this->getHeaders())
-                ->withOptions(['force_ip_resolve' => 'v6'])
-                ->timeout(10)
-                ->get(self::BASE_URL . "/movie/{$movieId}", [
-                    'append_to_response' => 'videos',
-                    'language' => self::LANG
-                ]);
+            $response = $this->adaptiveGet(self::BASE_URL . "/movie/{$movieId}", [
+                'append_to_response' => 'videos',
+                'language' => self::LANG
+            ], $this->getHeaders());
 
             if ($response->successful()) {
                 $movie = $response->json();
@@ -116,13 +110,10 @@ class MovieController extends Controller
                 }
 
                 // Fetch similar movies
-                $similarResponse = Http::withHeaders($this->getHeaders())
-                    ->withOptions(['force_ip_resolve' => 'v6'])
-                    ->timeout(10)
-                    ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
-                        'language' => self::LANG,
-                        'page' => 1
-                    ]);
+                $similarResponse = $this->adaptiveGet(self::BASE_URL . "/movie/{$movieId}/similar", [
+                    'language' => self::LANG,
+                    'page' => 1
+                ], $this->getHeaders());
 
                 $similar = [];
                 if ($similarResponse->successful()) {
@@ -166,10 +157,7 @@ class MovieController extends Controller
                         'page' => $page
                     ], $extraParams);
 
-                    $response = Http::withHeaders($this->getHeaders())
-                        ->withOptions(['force_ip_resolve' => 'v6'])
-                        ->timeout(10)
-                        ->get(self::BASE_URL . $endpoint, $params);
+                    $response = $this->adaptiveGet(self::BASE_URL . $endpoint, $params, $this->getHeaders());
 
                     if ($response->successful()) {
                         $results = $response->json()['results'] ?? [];

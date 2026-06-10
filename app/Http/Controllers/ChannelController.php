@@ -23,7 +23,7 @@ class ChannelController extends Controller
         $cacheKey = "iptv_channels_raw";
         $rawChannels = Cache::remember($cacheKey, 3600, function () {
             try {
-                $response = Http::timeout(5)->get(self::FEED_URL);
+                $response = $this->adaptiveGet(self::FEED_URL);
                 if ($response->successful()) {
                     $json = $response->json();
                     if (!empty($json)) {
