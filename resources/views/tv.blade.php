@@ -123,26 +123,6 @@
     async function loadChannels(category) {
         const listContainer = document.getElementById('channels-list');
 
-        // Check sessionStorage cache first for instant load
-        const cacheKey = 'channels_' + category;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-            try {
-                const cachedData = JSON.parse(cached);
-                if (cachedData && cachedData.length > 0) {
-                    currentChannels = cachedData;
-                    document.getElementById('channels-count').textContent = `${cachedData.length} Channels`;
-                    renderChannels(cachedData);
-                    const lastChannelName = localStorage.getItem('last_watched_channel');
-                    if (cachedData.length > 0) {
-                        const found = lastChannelName ? cachedData.find(c => c.name === lastChannelName) : null;
-                        playChannel(found || cachedData[0]);
-                    }
-                    return;
-                }
-            } catch(e) { /* stale cache, refetch */ }
-        }
-
         listContainer.innerHTML = `
             <div class="media-item-row shimmer-row shimmer"></div>
             <div class="media-item-row shimmer-row shimmer"></div>
@@ -171,15 +151,19 @@
             }
 
             currentChannels = filtered;
-            sessionStorage.setItem(cacheKey, JSON.stringify(filtered));
             document.getElementById('channels-count').textContent = `${filtered.length} Channels`;
             renderChannels(filtered);
             
-            // Auto-play last watched channel, or first channel if none saved
-            const lastChannelName = localStorage.getItem('last_watched_channel');
+            // Auto-play T Sports HD if present, otherwise last watched channel, otherwise first channel
             if (filtered.length > 0) {
-                const found = lastChannelName ? filtered.find(c => c.name === lastChannelName) : null;
-                playChannel(found || filtered[0]);
+                const tSports = filtered.find(c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === 'tsportshd');
+                if (tSports) {
+                    playChannel(tSports);
+                } else {
+                    const lastChannelName = localStorage.getItem('last_watched_channel');
+                    const found = lastChannelName ? filtered.find(c => c.name === lastChannelName) : null;
+                    playChannel(found || filtered[0]);
+                }
             }
 
         } catch (error) {
