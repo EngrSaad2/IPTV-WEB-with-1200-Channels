@@ -35,18 +35,20 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Deploy to Server via SSH/Rsync
+      - name: Deploy via SSH
         if: ${{ steps.check_deploy_secrets.outputs.ready == 'true' }}
-        uses: easingthemes/ssh-deploy@v5.1.0
+        uses: appleboy/ssh-action@v1.2.2
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.SSH_HOST }}
-          REMOTE_USER: ${{ secrets.SSH_USER }}
-          REMOTE_PORT: ${{ secrets.SSH_PORT }}
-          TARGET: "/home/u263680919/domains/triangletech.com.bd/public_html/tv.triangletech.com.bd"
-          SOURCE: "./"
-          ARGS: "-rtlzO --delete"
-          EXCLUDE: "/.git/, /.github/, /node_modules/, /tests/, .env, *.zip, /DB/"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /home/u263680919/domains/triangletech.com.bd/public_html/tv.triangletech.com.bd
+            git fetch origin
+            git reset --hard origin/main
+            composer install --no-dev --optimize-autoloader --no-interaction
+
 
       - name: Skip deploy when SSH secrets are missing
         if: ${{ steps.check_deploy_secrets.outputs.ready != 'true' }}
