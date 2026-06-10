@@ -23,15 +23,26 @@ class ChannelController extends Controller
         $cacheKey = "iptv_channels_raw";
         $rawChannels = Cache::remember($cacheKey, 3600, function () {
             try {
-                $response = Http::timeout(15)->get(self::FEED_URL);
+                $response = Http::timeout(5)->get(self::FEED_URL);
                 if ($response->successful()) {
-                    return $response->json();
+                    $json = $response->json();
+                    if (!empty($json)) {
+                        return $json;
+                    }
                 }
             } catch (\Exception $e) {
-                // Fail silently, cache empty array or fallback
+                // Fail silently
             }
+
+            // Fallback to local channels.json
+            $localPath = resource_path('json/channels.json');
+            if (file_exists($localPath)) {
+                return json_decode(file_get_contents($localPath), true) ?? [];
+            }
+
             return [];
         });
+
 
         $all = [];
         // Add custom movie channels

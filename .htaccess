@@ -1,12 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # If the file exists in the public directory, rewrite to serve it
-    RewriteCond %{DOCUMENT_ROOT}/LiveTVweb/public/$1 -f
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Redirect empty requests to public/
+    RewriteRule ^$ public/ [L]
     
-    # Otherwise, route non-file requests to the root index.php
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ index.php [L]
+    # Rewrite all asset and page requests to the public/ directory
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>
