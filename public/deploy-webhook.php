@@ -95,6 +95,13 @@ function execute($cmd, $dir) {
         $env['PATH'] .= ':/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin';
     }
     
+    // Set variables for composer and local environment
+    $env['HOME'] = '/home/u263680919';
+    $env['COMPOSER_HOME'] = '/home/u263680919/.composer';
+    $env['COMPOSER_PROCESS_TIMEOUT'] = '0';
+    $env['COMPOSER_NO_INTERACTION'] = '1';
+    $env['COMPOSER_NO_AUDIT'] = '1';
+    
     $process = proc_open($cmd, $descriptorspec, $pipes, $dir, $env);
     $stdout = '';
     $stderr = '';
