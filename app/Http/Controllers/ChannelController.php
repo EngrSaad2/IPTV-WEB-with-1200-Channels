@@ -114,47 +114,37 @@ class ChannelController extends Controller
 
     private function prioritizeSports(array $channels): array
     {
-        $prioritizedOrder = [
-            'tsportshd', 
-            'ptvsports', 
-            'asportshd', 
-            'asports', 
-            'ddsports'
-        ];
-        
-        $matched = array_fill_keys($prioritizedOrder, null);
+        $prioritized = [];
+        $ptv = null;
+        $asports = null;
+        $tsports = null;
+        $ddsports = null;
         $others = [];
 
         foreach ($channels as $item) {
             $nameNormalized = preg_replace('/[^a-z0-9]/', '', strtolower($item['name']));
             
-            if (array_key_exists($nameNormalized, $matched) && $matched[$nameNormalized] === null) {
-                $matched[$nameNormalized] = $item;
+            if ($nameNormalized === 'tsportshd' || $nameNormalized === 'tsports') {
+                if (!$tsports) $tsports = $item;
+                else $others[] = $item;
+            } elseif (str_contains($nameNormalized, 'ptvsports')) {
+                if (!$ptv) $ptv = $item;
+                else $others[] = $item;
+            } elseif (str_contains($nameNormalized, 'asports')) {
+                if (!$asports) $asports = $item;
+                else $others[] = $item;
+            } elseif ($nameNormalized === 'ddsports') {
+                if (!$ddsports) $ddsports = $item;
+                else $others[] = $item;
             } else {
                 $others[] = $item;
             }
         }
 
-        $prioritized = [];
-        if ($matched['tsportshd']) {
-            $prioritized[] = $matched['tsportshd'];
-        }
-        if ($matched['ptvsports']) {
-            $prioritized[] = $matched['ptvsports'];
-        }
-        
-        if ($matched['asportshd']) {
-            $prioritized[] = $matched['asportshd'];
-            if ($matched['asports']) {
-                $others[] = $matched['asports'];
-            }
-        } elseif ($matched['asports']) {
-            $prioritized[] = $matched['asports'];
-        }
-        
-        if ($matched['ddsports']) {
-            $prioritized[] = $matched['ddsports'];
-        }
+        if ($tsports) $prioritized[] = $tsports;
+        if ($ptv) $prioritized[] = $ptv;
+        if ($asports) $prioritized[] = $asports;
+        if ($ddsports) $prioritized[] = $ddsports;
 
         return array_merge($prioritized, $others);
     }
@@ -167,12 +157,15 @@ class ChannelController extends Controller
         foreach ($channels as $item) {
             $nameLower = strtolower($item['name']);
 
-            // Explicit global exclusions matching Kotlin
-            if (str_contains($nameLower, 'bein sports') ||
+            // Explicit global exclusions matching Kotlin, keeping requested channels
+            $isBeinMaxOrSports = (str_contains($nameLower, 'bein sports') && (str_contains($nameLower, 'max') || $nameLower === 'bein sports'));
+            $isFoxAllowed = (str_contains($nameLower, 'fox sports') && (str_contains($nameLower, '1') || str_contains($nameLower, '2') || $nameLower === 'fox sports'));
+
+            if ((str_contains($nameLower, 'bein sports') && !$isBeinMaxOrSports) ||
                 str_contains($nameLower, 'sky sports') ||
                 str_contains($nameLower, 'tnt sports') ||
                 str_contains($nameLower, 'espn') ||
-                str_contains($nameLower, 'fox sports') ||
+                (str_contains($nameLower, 'fox sports') && !$isFoxAllowed) ||
                 str_contains($nameLower, 'supersport')) {
                 continue;
             }
@@ -476,13 +469,25 @@ class ChannelController extends Controller
             ['name' => 'B TV', 'logo' => 'https://s3.aynaott.com/storage/00da8a07fb26b2fb79359ee535e4c7bc', 'url' => 'https://tvsen6.aynaott.com/btvctg/index.m3u8?e=1779283747&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=9bca925fbdfe526b29d41ab7802348ec', 'group' => 'Sports'],
             ['name' => 'Somoy TV', 'logo' => 'https://s3.aynaott.com/storage/ece71c1163a377fbe2d93f9d28c34f60', 'url' => 'https://tvsen6.aynaott.com/somoytv/index.m3u8?e=1779283766&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=269246b8a31fb3a656624d71e10e447d', 'group' => 'Sports'],
             ['name' => 'beIN Sports', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
+            ['name' => 'beIN Sports Max 1', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
+            ['name' => 'beIN Sports Max 2', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
+            ['name' => 'beIN Sports Max 3', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
+            ['name' => 'beIN Sports Max 4', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
             ['name' => 'ESPN', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/ESPN.png', 'url' => 'https://tvsen5.aynaott.com/espn/index.m3u8?e=1779283793&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cf2b4cb8b6c96ab86daee4299c792295', 'group' => 'Sports'],
-            ['name' => 'Fox Sports', 'logo' => 'https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5', 'url' => 'https://tvsen7.aynaott.com/foxsports2/index.m3u8?e=1779283790&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cbb7f40b4af7be51a91e0629a5ac7238', 'group' => 'Sports'],
+            ['name' => 'Fox Sports 1', 'logo' => 'https://i.imgur.com/O9BapV9.png', 'url' => 'https://cors-proxy.cooks.fyi/http://190.11.225.124:5000/live/fs1_hd/playlist.m3u8', 'group' => 'Sports'],
+            ['name' => 'Fox Sports 2', 'logo' => 'https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5', 'url' => 'https://tvsen7.aynaott.com/foxsports2/index.m3u8?e=1779283790&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cbb7f40b4af7be51a91e0629a5ac7238', 'group' => 'Sports'],
+            ['name' => 'BBC One', 'logo' => 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/BBC_One_logo_2021.svg/960px-BBC_One_logo_2021.svg.png', 'url' => 'http://92.114.85.72:8000/play/a0mp', 'group' => 'Sports'],
+            ['name' => 'ITV1', 'logo' => 'https://i.imgur.com/xwPekCF.png', 'url' => 'http://80.194.62.172:50002/stream/channelid/95929545', 'group' => 'Sports'],
+            ['name' => 'TSN 1', 'logo' => 'https://s3.aynaott.com/storage/59fe7ff434fed04ecec29b4d737ebc95', 'url' => 'https://tvsen7.aynaott.com/tsn1/index.m3u8?e=1779283805&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=e5ce886378c54bd381b9833b5d57649a', 'group' => 'Sports'],
+            ['name' => 'TSN 2', 'logo' => 'https://s3.aynaott.com/storage/17642cb60c2af7fc36ca1e08cc54fdae', 'url' => 'https://tvsen7.aynaott.com/tsn2/index.m3u8?e=1779283793&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=636d9b8b83d4316193c2d1c9aad8951c', 'group' => 'Sports'],
+            ['name' => 'TSN 3', 'logo' => 'https://s3.aynaott.com/storage/1cb10107a47db353e35ad78d3160eda7', 'url' => 'https://tvsen7.aynaott.com/tsn3/index.m3u8?e=1779283805&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=fd3b5d71227f183da51caba4325cee10', 'group' => 'Sports'],
+            ['name' => 'Unite8 Sports 1', 'logo' => 'https://static.wikia.nocookie.net/logopedia/images/a/a2/Zee_Bihar_Jharkhand_2025_Logo.png', 'url' => 'https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg01412-xiaomiasia-zeebihar-xiaomi/playlist.m3u8', 'group' => 'Sports'],
+            ['name' => 'Unite8 Sports 2', 'logo' => 'https://static.wikia.nocookie.net/logopedia/images/a/a2/Zee_Bihar_Jharkhand_2025_Logo.png', 'url' => 'https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg01412-xiaomiasia-zee24ghantaa-xiaomi/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Thunder Er', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380791303.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/thunder/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Fighters', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380942670.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/fighter/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Crazy Ex', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1778085745609.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/crazy_ex/playlist.m3u8', 'group' => 'Sports'],
-            ['name' => 'PTV Sports', 'logo' => 'https://s3.aynaott.com/storage/9d9d7cbfba5a8ceea648bbd963ad1014', 'url' => 'https://tvsen5.aynaott.com/PtvSports/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=b714d4f0812496defe4be81125c560aa', 'group' => 'Sports'],
-            ['name' => 'A sports', 'logo' => 'https://s3.aynaott.com/storage/64de30d2df9b2a888cb73f17614a9a8b', 'url' => 'https://tvsen6.aynaott.com/asports/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=79cb2b10ec3a06c91dc483a6f1a04f36', 'group' => 'Sports'],
+            ['name' => 'PTV Sports HD (Pakistan)', 'logo' => 'https://s3.aynaott.com/storage/9d9d7cbfba5a8ceea648bbd963ad1014', 'url' => 'https://tvsen5.aynaott.com/PtvSports/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=b714d4f0812496defe4be81125c560aa', 'group' => 'Sports'],
+            ['name' => 'A Sports HD (Pakistan)', 'logo' => 'https://s3.aynaott.com/storage/64de30d2df9b2a888cb73f17614a9a8b', 'url' => 'https://tvsen6.aynaott.com/asports/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=79cb2b10ec3a06c91dc483a6f1a04f36', 'group' => 'Sports'],
             ['name' => 'Cricket Gold', 'logo' => 'https://s3.aynaott.com/storage/7d20b575edc4e4b5276faa8c246e72a4', 'url' => 'https://tvsen6.aynaott.com/CricketGold/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=c1ffa5e779430e350c5cc5401c9b9bdc', 'group' => 'Sports'],
             ['name' => 'Willow TV', 'logo' => 'https://s3.aynaott.com/storage/94a778ec3219f7eb54bdf1ee07a95788', 'url' => 'https://tvsen5.aynaott.com/willowhd/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=7ff3de9f9a286f0a6df46787e8abd8fb', 'group' => 'Sports'],
             ['name' => 'DD Sports', 'logo' => 'https://s3.aynaott.com/storage/188500190395c4de0e506d518925dcc4', 'url' => 'https://cdn-6.pishow.tv/live/13/master.m3u8', 'group' => 'Sports'],
@@ -577,6 +582,30 @@ class ChannelController extends Controller
         }
         if (str_contains($n, 'SKY SPORT')) {
             return 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Sky%20Sports.png';
+        }
+        if (str_contains($n, 'BBC ONE')) {
+            return 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/BBC_One_logo_2021.svg/960px-BBC_One_logo_2021.svg.png';
+        }
+        if (str_contains($n, 'ITV1')) {
+            return 'https://i.imgur.com/xwPekCF.png';
+        }
+        if (str_contains($n, 'FOX SPORTS 1') || str_contains($n, 'FS1')) {
+            return 'https://i.imgur.com/O9BapV9.png';
+        }
+        if (str_contains($n, 'FOX SPORTS 2') || str_contains($n, 'FS2')) {
+            return 'https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5';
+        }
+        if (str_contains($n, 'TSN 1')) {
+            return 'https://s3.aynaott.com/storage/59fe7ff434fed04ecec29b4d737ebc95';
+        }
+        if (str_contains($n, 'TSN 2')) {
+            return 'https://s3.aynaott.com/storage/17642cb60c2af7fc36ca1e08cc54fdae';
+        }
+        if (str_contains($n, 'TSN 3')) {
+            return 'https://s3.aynaott.com/storage/1cb10107a47db353e35ad78d3160eda7';
+        }
+        if (str_contains($n, 'UNITE8 SPORTS') || str_contains($n, 'ZEE5')) {
+            return 'https://static.wikia.nocookie.net/logopedia/images/a/a2/Zee_Bihar_Jharkhand_2025_Logo.png';
         }
 
         return self::DEFAULT_FALLBACK_LOGO;
