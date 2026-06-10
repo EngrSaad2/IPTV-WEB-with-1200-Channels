@@ -7,45 +7,19 @@ use Illuminate\Support\Facades\Http;
 
 abstract class Controller
 {
-    protected function getIpResolveMode(string $url, array $headers = []): string
+    protected function getIpResolveMode(): string
     {
-        $parsed = parse_url($url);
-        $host = ($parsed['scheme'] ?? 'https') . '://' . ($parsed['host'] ?? '');
-        $cacheKey = 'ip_resolve_mode_' . md5($host);
-        
-        return Cache::remember($cacheKey, 86400, function () use ($host, $headers) {
-            // Probe IPv6 first
-            try {
-                $response = Http::withHeaders($headers)
-                    ->withOptions(['force_ip_resolve' => 'v6'])
-                    ->timeout(2)
-                    ->get($host);
-                if ($response->status() > 0) {
-                    return 'v6';
-                }
-            } catch (\Exception $e) {
-                // Ignore
-            }
-
-            // Probe default
-            try {
-                $response = Http::withHeaders($headers)
-                    ->timeout(2)
-                    ->get($host);
-                if ($response->status() > 0) {
-                    return 'default';
-                }
-            } catch (\Exception $e) {
-                // Ignore
-            }
-
+        // On local environment (XAMPP), default to IPv4 as IPv6 is typically not configured.
+        // On production environment (Hostinger), force IPv6 to bypass their outgoing connection block.
+        if (app()->environment('local') || env('APP_ENV') === 'local' || (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === 'localhost')) {
             return 'default';
-        });
+        }
+        return 'v6';
     }
 
     protected function adaptiveGet(string $url, array $params = [], array $headers = []): \Illuminate\Http\Client\Response
     {
-        $resolveMode = $this->getIpResolveMode($url, $headers);
+        $resolveMode = $this->getIpResolveMode();
         
         $options = [];
         if ($resolveMode === 'v6') {
@@ -55,7 +29,7 @@ abstract class Controller
         try {
             $response = Http::withHeaders($headers)
                 ->withOptions($options)
-                ->timeout(6)
+                ->timeout(10)
                 ->get($url, $params);
             
             if ($response->successful()) {
@@ -70,7 +44,7 @@ abstract class Controller
             try {
                 return Http::withHeaders($headers)
                     ->withOptions($fallbackOptions)
-                    ->timeout(6)
+                    ->timeout(10)
                     ->get($url, $params);
             } catch (\Exception $ex) {
                 // Ignore and fallthrough
@@ -78,7 +52,7 @@ abstract class Controller
         }
 
         return Http::withHeaders($headers)
-            ->timeout(6)
+            ->timeout(10)
             ->get($url, $params);
     }
 }
