@@ -33,45 +33,95 @@
 
 @section('scripts')
 <script>
+    const TMDB_TOKEN = "{{ env('TMDB_READ_TOKEN') }}";
+    const TMDB_BASE  = 'https://api.themoviedb.org/3';
+    const TMDB_IMG   = 'https://image.tmdb.org/t/p/w500';
+    const TMDB_BACK  = 'https://image.tmdb.org/t/p/w780';
+
+    const ADULT_KW = ['nude','naked','erotic','erotica','sex','xxx','porn','adult film','softcore','hardcore'];
+
     document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const searchParam = urlParams.get('search');
-        
         if (searchParam) {
-            // Set input value and load search results
             document.getElementById('global-search-input').value = searchParam;
             loadMovieSearch(searchParam);
         } else {
-            // Load popular movies by default
             loadMovieGenre(0, 'Popular');
         }
     });
 
+    // ---------- TMDB direct fetch helpers ----------
+
+    function tmdbHeaders() {
+        return { 'Authorization': 'Bearer ' + TMDB_TOKEN, 'Accept': 'application/json' };
+    }
+
+    function isAdult(m) {
+        if (m.adult) return true;
+        const ids = m.genre_ids || [];
+        if (ids.includes(10749)) return true;
+        const title = (m.title || '').toLowerCase();
+        const overview = (m.overview || '').toLowerCase();
+        for (const kw of ADULT_KW) {
+            if (title.includes(kw) || overview.includes(kw)) return true;
+        }
+        return false;
+    }
+
+    function processResults(results) {
+        return results
+            .filter(m => !isAdult(m) && m.poster_path && m.backdrop_path)
+            .map(m => ({
+                id: m.id,
+                title: m.title || 'Unknown',
+                poster_path: TMDB_IMG + m.poster_path,
+                backdrop_path: TMDB_BACK + m.backdrop_path,
+                vote_average: Math.round((m.vote_average || 0) * 10) / 10,
+                release_year: (m.release_date || '').substring(0, 4)
+            }));
+    }
+
+    async function tmdbGet(endpoint, params = {}) {
+        const qs = new URLSearchParams({ language: 'en-US', ...params }).toString();
+        const res = await fetch(`${TMDB_BASE}${endpoint}?${qs}`, { headers: tmdbHeaders() });
+        if (!res.ok) throw new Error('TMDB error ' + res.status);
+        return res.json();
+    }
+
+    async function fetchPages(endpoint, extraParams = {}, pages = 3) {
+        let all = [];
+        for (let page = 1; page <= pages; page++) {
+            try {
+                const data = await tmdbGet(endpoint, { page, ...extraParams });
+                all = all.concat(processResults(data.results || []));
+            } catch(e) { /* skip page */ }
+        }
+        // deduplicate
+        const seen = {};
+        return all.filter(m => seen[m.id] ? false : (seen[m.id] = true));
+    }
+
+    // ---------- Genre / Category loaders ----------
+
     async function loadMovieGenre(genreId, label, chipElement = null) {
-        // Highlight chip
         if (chipElement) {
-            const chips = document.querySelectorAll('.genre-chip');
-            chips.forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
             chipElement.classList.add('active');
         }
-
-        // Set header
         document.getElementById('movies-grid-title').textContent = `${label} Movies`;
-        
-        // Show shimmer
         showShimmer();
 
         try {
-            let url = `${API_BASE}/movies/trending`;
+            let movies = [];
             if (genreId === 'islamic') {
-                url = `${API_BASE}/movies/islamic`;
+                movies = await fetchPages('/discover/movie', { with_keywords: '187|789', sort_by: 'popularity.desc' }, 10);
             } else if (genreId > 0) {
-                url = `${API_BASE}/movies/genre/${genreId}`;
+                movies = await fetchPages('/discover/movie', { with_genres: genreId, sort_by: 'popularity.desc' });
+            } else {
+                movies = await fetchPages('/movie/popular');
             }
-
-            const response = await fetch(url);
-            const data = await response.json();
-            renderMovies(data);
+            renderMovies(movies);
         } catch (error) {
             console.error('Failed to fetch movies:', error);
             document.getElementById('movies-grid').innerHTML = '<div class="p-4 text-center text-danger">Failed to load movies list.</div>';
@@ -81,15 +131,12 @@
     async function loadMovieSearch(query) {
         document.getElementById('movies-grid-title').textContent = `Search Results: "${query}"`;
         showShimmer();
-
-        // De-select all genre chips
-        const chips = document.querySelectorAll('.genre-chip');
-        chips.forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.genre-chip').forEach(c => c.classList.remove('active'));
 
         try {
-            const response = await fetch(`${API_BASE}/movies/search?query=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            renderMovies(data);
+            const data  = await tmdbGet('/search/movie', { query });
+            const movies = processResults(data.results || []);
+            renderMovies(movies);
         } catch (error) {
             console.error('Failed to search movies:', error);
             document.getElementById('movies-grid').innerHTML = '<div class="p-4 text-center text-danger">Search query failed.</div>';
@@ -108,17 +155,15 @@
 
     function renderMovies(movies) {
         const grid = document.getElementById('movies-grid');
-        if (movies.length === 0) {
+        if (!movies || movies.length === 0) {
             grid.innerHTML = '<div class="p-4 text-center text-muted">No media items found matching criteria.</div>';
             return;
         }
-
         grid.innerHTML = '';
         movies.forEach(movie => {
             const card = document.createElement('div');
             card.className = 'movie-card';
             card.onclick = () => window.location.href = `${APP_URL}/movies/${movie.id}`;
-            
             card.innerHTML = `
                 <div class="rating-badge">
                     <i class="bi bi-star-fill"></i> ${movie.vote_average || '0.0'}

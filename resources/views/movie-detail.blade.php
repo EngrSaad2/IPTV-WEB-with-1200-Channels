@@ -49,21 +49,78 @@
 @section('scripts')
 <script>
     const movieId = "{{ $id }}";
+    const TMDB_TOKEN = "{{ env('TMDB_READ_TOKEN') }}";
+    const TMDB_BASE  = 'https://api.themoviedb.org/3';
+    const TMDB_IMG   = 'https://image.tmdb.org/t/p/w500';
+    const TMDB_BACK  = 'https://image.tmdb.org/t/p/w780';
+
     let activeMovie = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         loadMovieDetails();
     });
 
+    function tmdbHeaders() {
+        return { 'Authorization': 'Bearer ' + TMDB_TOKEN, 'Accept': 'application/json' };
+    }
+
+    async function tmdbGet(endpoint, params = {}) {
+        const qs = new URLSearchParams({ language: 'en-US', ...params }).toString();
+        const res = await fetch(`${TMDB_BASE}${endpoint}?${qs}`, { headers: tmdbHeaders() });
+        if (!res.ok) throw new Error('TMDB error ' + res.status);
+        return res.json();
+    }
+
     async function loadMovieDetails() {
         try {
-            const response = await fetch(`${API_BASE}/movies/detail/${movieId}`);
-            if (!response.ok) throw new Error('Movie details load failed');
-            
-            const data = await response.json();
-            activeMovie = data;
-            
-            renderDetails(data);
+            const [movie, videosData, similarData] = await Promise.all([
+                tmdbGet(`/movie/${movieId}`, { append_to_response: 'videos' }),
+                Promise.resolve(null), // included in movie above via append_to_response
+                tmdbGet(`/movie/${movieId}/similar`)
+            ]);
+
+            activeMovie = movie;
+
+            // Extract trailer
+            let trailerKey = null;
+            const videos = movie.videos?.results || [];
+            for (const v of videos) {
+                if (v.site?.toLowerCase() === 'youtube' && v.type?.toLowerCase() === 'trailer') {
+                    trailerKey = v.key;
+                    break;
+                }
+            }
+            if (!trailerKey && videos.length > 0) trailerKey = videos[0]?.key;
+
+            // Process similar
+            const similar = (similarData.results || [])
+                .filter(m => m.poster_path && m.backdrop_path)
+                .slice(0, 20)
+                .map(m => ({
+                    id: m.id,
+                    title: m.title || 'Unknown',
+                    poster_path: TMDB_IMG + m.poster_path,
+                    backdrop_path: TMDB_BACK + m.backdrop_path,
+                    vote_average: Math.round((m.vote_average || 0) * 10) / 10,
+                    release_year: (m.release_date || '').substring(0, 4)
+                }));
+
+            const detail = {
+                id: movie.id,
+                title: movie.title || 'Unknown',
+                overview: movie.overview || '',
+                poster_path: movie.poster_path ? TMDB_IMG + movie.poster_path : null,
+                backdrop_path: movie.backdrop_path ? TMDB_BACK + movie.backdrop_path : null,
+                release_date: movie.release_date || '',
+                release_year: (movie.release_date || '').substring(0, 4),
+                runtime: movie.runtime || 0,
+                vote_average: Math.round((movie.vote_average || 0) * 10) / 10,
+                genres: movie.genres || [],
+                trailer_key: trailerKey,
+                similar
+            };
+
+            renderDetails(detail);
         } catch (error) {
             console.error('Failed to load movie details:', error);
             document.getElementById('movie-detail-content').innerHTML = `
@@ -144,7 +201,6 @@
             sidebar.innerHTML = '<div class="p-3 text-center text-muted">No similar movies found.</div>';
             return;
         }
-
         sidebar.innerHTML = '';
         similarList.forEach(m => {
             const row = document.createElement('div');
@@ -165,16 +221,14 @@
 
     function toggleMovieFavorite() {
         if (!activeMovie) return;
-        
         const item = {
-            id: activeMovie.id.toString(),
+            id: (activeMovie.id || '').toString(),
             name: activeMovie.title,
             title: activeMovie.title,
             logo: activeMovie.poster_path,
             group: activeMovie.release_year,
             type: 'movie'
         };
-
         toggleFavorite(item, (isFav) => {
             const favBtn = document.getElementById('movie-fav-btn');
             if (isFav) {
