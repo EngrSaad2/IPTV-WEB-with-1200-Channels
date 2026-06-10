@@ -34,6 +34,16 @@ class MovieController extends Controller
         return response()->json($movies);
     }
 
+    public function islamic()
+    {
+        // Fetch 10 pages and bypass low vote count filter to get 100+ Islamic movies
+        $movies = $this->fetchConcurrentPages('/discover/movie', [
+            'with_keywords' => '187|789',
+            'sort_by' => 'popularity.desc'
+        ], 10, true);
+        return response()->json($movies);
+    }
+
     public function newReleases()
     {
         $movies = $this->fetchConcurrentPages('/movie/now_playing');
@@ -145,12 +155,12 @@ class MovieController extends Controller
         return response()->json($detail);
     }
 
-    private function fetchConcurrentPages(string $endpoint, array $extraParams = []): array
+    private function fetchConcurrentPages(string $endpoint, array $extraParams = [], int $pagesToFetch = self::PAGES_TO_FETCH, bool $bypassVoteCount = false): array
     {
-        $cacheKey = 'tmdb_' . str_replace('/', '_', $endpoint) . '_' . md5(serialize($extraParams));
-        return Cache::remember($cacheKey, 1800, function () use ($endpoint, $extraParams) {
+        $cacheKey = 'tmdb_' . str_replace('/', '_', $endpoint) . '_' . md5(serialize($extraParams)) . '_pages_' . $pagesToFetch . '_bypass_' . ($bypassVoteCount ? '1' : '0');
+        return Cache::remember($cacheKey, 1800, function () use ($endpoint, $extraParams, $pagesToFetch, $bypassVoteCount) {
             $merged = [];
-            for ($page = 1; $page <= self::PAGES_TO_FETCH; $page++) {
+            for ($page = 1; $page <= $pagesToFetch; $page++) {
                 try {
                     $params = array_merge([
                         'language' => self::LANG,
@@ -161,7 +171,7 @@ class MovieController extends Controller
 
                     if ($response->successful()) {
                         $results = $response->json()['results'] ?? [];
-                        $processed = $this->processMovies($results);
+                        $processed = $this->processMovies($results, $bypassVoteCount);
                         $merged = array_merge($merged, $processed);
                     }
                 } catch (\Exception $e) {
@@ -179,11 +189,11 @@ class MovieController extends Controller
         });
     }
 
-    private function processMovies(array $results): array
+    private function processMovies(array $results, bool $bypassVoteCount = false): array
     {
         $processed = [];
         foreach ($results as $m) {
-            if ($this->isAdultContent($m)) {
+            if ($this->isAdultContent($m, $bypassVoteCount)) {
                 continue;
             }
 
@@ -208,7 +218,7 @@ class MovieController extends Controller
         return $processed;
     }
 
-    private function isAdultContent(array $m): bool
+    private function isAdultContent(array $m, bool $bypassVoteCount = false): bool
     {
         // 1) TMDB adult flag
         if (!empty($m['adult'])) {
@@ -228,9 +238,11 @@ class MovieController extends Controller
         }
 
         // 3) Low vote count filter
-        $voteCount = $m['vote_count'] ?? 0;
-        if ($voteCount > 0 && $voteCount < 50) {
-            return true;
+        if (!$bypassVoteCount) {
+            $voteCount = $m['vote_count'] ?? 0;
+            if ($voteCount > 0 && $voteCount < 50) {
+                return true;
+            }
         }
 
         // 4) Blacklist keyword filter

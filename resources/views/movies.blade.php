@@ -9,6 +9,7 @@
         <!-- Genre Chips -->
         <div class="genre-chips" id="genre-chips-container">
             <span class="genre-chip active" onclick="loadMovieGenre(0, 'Popular', this)">Popular</span>
+            <span class="genre-chip" onclick="loadMovieGenre('islamic', 'Islamic', this)">Islamic</span>
             <span class="genre-chip" onclick="loadMovieGenre(28, 'Action', this)">Action</span>
             <span class="genre-chip" onclick="loadMovieGenre(53, 'Thriller', this)">Thriller</span>
             <span class="genre-chip" onclick="loadMovieGenre(16, 'Animation', this)">Animation</span>
@@ -62,7 +63,9 @@
 
         try {
             let url = `${API_BASE}/movies/trending`;
-            if (genreId > 0) {
+            if (genreId === 'islamic') {
+                url = `${API_BASE}/movies/islamic`;
+            } else if (genreId > 0) {
                 url = `${API_BASE}/movies/genre/${genreId}`;
             }
 

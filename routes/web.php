@@ -35,6 +35,7 @@ Route::prefix('api')->group(function () {
     
     Route::prefix('movies')->group(function () {
         Route::get('/trending', [MovieController::class, 'trending']);
+        Route::get('/islamic', [MovieController::class, 'islamic']);
         Route::get('/new-releases', [MovieController::class, 'newReleases']);
         Route::get('/top-rated', [MovieController::class, 'topRated']);
         Route::get('/genre/{genreId}', [MovieController::class, 'byGenre']);
