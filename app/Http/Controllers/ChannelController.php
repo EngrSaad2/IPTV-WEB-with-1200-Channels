@@ -116,9 +116,6 @@ class ChannelController extends Controller
     {
         $prioritizedOrder = [
             'tsportshd', 
-            'sportslegends', 
-            'flashguyshd', 
-            'sportsrange', 
             'ptvsports', 
             'asportshd', 
             'asports', 
@@ -141,15 +138,6 @@ class ChannelController extends Controller
         $prioritized = [];
         if ($matched['tsportshd']) {
             $prioritized[] = $matched['tsportshd'];
-        }
-        if ($matched['sportslegends']) {
-            $prioritized[] = $matched['sportslegends'];
-        }
-        if ($matched['flashguyshd']) {
-            $prioritized[] = $matched['flashguyshd'];
-        }
-        if ($matched['sportsrange']) {
-            $prioritized[] = $matched['sportsrange'];
         }
         if ($matched['ptvsports']) {
             $prioritized[] = $matched['ptvsports'];
@@ -490,9 +478,6 @@ class ChannelController extends Controller
             ['name' => 'beIN Sports', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
             ['name' => 'ESPN', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/ESPN.png', 'url' => 'https://tvsen5.aynaott.com/espn/index.m3u8?e=1779283793&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cf2b4cb8b6c96ab86daee4299c792295', 'group' => 'Sports'],
             ['name' => 'Fox Sports', 'logo' => 'https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5', 'url' => 'https://tvsen7.aynaott.com/foxsports2/index.m3u8?e=1779283790&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cbb7f40b4af7be51a91e0629a5ac7238', 'group' => 'Sports'],
-            ['name' => 'Sports Legends', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770377900139.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/sportslegends/playlist.m3u8', 'group' => 'Sports'],
-            ['name' => 'Flash Guys HD', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770378074527.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/flashguys/playlist.m3u8', 'group' => 'Sports'],
-            ['name' => 'Sports Range', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380601958.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/sportrange/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Thunder Er', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380791303.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/thunder/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Fighters', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380942670.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/fighter/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Crazy Ex', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1778085745609.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/crazy_ex/playlist.m3u8', 'group' => 'Sports'],
