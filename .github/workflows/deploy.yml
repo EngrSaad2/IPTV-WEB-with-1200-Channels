@@ -21,8 +21,22 @@ jobs:
       - name: Install Composer Dependencies
         run: composer install --no-dev --prefer-dist --no-scripts --no-progress --no-interaction
 
+      - name: Check SSH deployment secrets
+        id: check_deploy_secrets
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          if [ -n "$SSH_PRIVATE_KEY" ] && [ -n "$SSH_HOST" ] && [ -n "$SSH_USER" ] && [ -n "$SSH_PORT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy to Server via SSH/Rsync
-        if: ${{ secrets.SSH_PRIVATE_KEY != '' && secrets.SSH_HOST != '' && secrets.SSH_USER != '' && secrets.SSH_PORT != '' }}
+        if: ${{ steps.check_deploy_secrets.outputs.ready == 'true' }}
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -35,6 +49,5 @@ jobs:
           EXCLUDE: "/.git/, /.github/, /node_modules/, /tests/, .env, *.zip, /DB/"
 
       - name: Skip deploy when SSH secrets are missing
-        if: ${{ secrets.SSH_PRIVATE_KEY == '' || secrets.SSH_HOST == '' || secrets.SSH_USER == '' || secrets.SSH_PORT == '' }}
+        if: ${{ steps.check_deploy_secrets.outputs.ready != 'true' }}
         run: echo "Skipping deploy because one or more SSH deployment secrets are not configured."
-
