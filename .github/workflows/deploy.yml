@@ -9,50 +9,47 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, mysqlnd
-
-      - name: Install Composer Dependencies
-        run: composer install --no-dev --prefer-dist --no-scripts --no-progress --no-interaction
-
-      - name: Check SSH deployment secrets
-        id: check_deploy_secrets
+      - name: Trigger Server Webhook
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
+          WEBHOOK_SECRET: ${{ secrets.GITHUB_WEBHOOK_SECRET }}
         run: |
-          if [ -n "$SSH_PRIVATE_KEY" ] && [ -n "$SSH_HOST" ] && [ -n "$SSH_USER" ] && [ -n "$SSH_PORT" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$WEBHOOK_SECRET" ]; then
+            echo "Error: GITHUB_WEBHOOK_SECRET secret is not configured in GitHub repository secrets."
+            exit 1
           fi
-
-      - name: Deploy via SSH
-        if: ${{ steps.check_deploy_secrets.outputs.ready == 'true' }}
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            cd /home/u263680919/domains/triangletech.com.bd/public_html/tv.triangletech.com.bd
-            git fetch origin
-            git reset --hard origin/main
-            composer install --no-dev --optimize-autoloader --no-interaction
-            php artisan migrate --force
-            php artisan db:seed --force
-            php artisan optimize:clear
-            php artisan optimize
-
-      - name: Skip deploy when SSH secrets are missing
-        if: ${{ steps.check_deploy_secrets.outputs.ready != 'true' }}
-        run: echo "Skipping deploy because one or more SSH deployment secrets are not configured."
+          
+          # Construct payload
+          PAYLOAD='{"ref":"refs/heads/main","sha":"'"$GITHUB_SHA"'"}'
+          
+          # Calculate signature using Node.js
+          SIGNATURE=$(node -e "
+            const crypto = require('crypto');
+            const hmac = crypto.createHmac('sha256', process.env.WEBHOOK_SECRET);
+            hmac.update(process.argv[1]);
+            console.log(hmac.digest('hex'));
+          " "$PAYLOAD")
+          
+          echo "Triggering deployment webhook..."
+          
+          # Perform the POST request and capture output/http code
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=$SIGNATURE" \
+            -d "$PAYLOAD" \
+            https://tv.triangletech.com.bd/deploy-webhook.php)
+            
+          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS" | cut -d':' -f2)
+          BODY=$(echo "$RESPONSE" | grep -v "HTTP_STATUS")
+          
+          echo "=================================="
+          echo "Webhook Response (HTTP Status: $HTTP_STATUS):"
+          echo "=================================="
+          echo "$BODY"
+          echo "=================================="
+          
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Deployment webhook returned status $HTTP_STATUS. Deployment failed."
+            exit 1
+          fi
+          
+          echo "Deployment succeeded."
