@@ -71,7 +71,9 @@ class ChannelController extends Controller
             if (str_contains(strtolower($c['name']), 't sports')) {
                 $newChannel['alternates'] = [
                     'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=755de1abb34402b6543ac8e82a34488d',
-                    'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1779283784&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=3b4c5a2cfa872fa7f91ffbfb4aa0f658'
+                    'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1779283784&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=3b4c5a2cfa872fa7f91ffbfb4aa0f658',
+                    'https://t-sports-1-hls.sports24.icu/tsports/index.m3u8',
+                    'http://116.58.200.222:8000/play/a05d/index.m3u8'
                 ];
             }
 
@@ -511,7 +513,9 @@ class ChannelController extends Controller
             ['name' => 'SONY TEN SPORTS 5', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Sony%20Sports%20Ten%205.png', 'url' => 'http://198.195.239.50:8095/SonyTenSports5/index.m3u8', 'group' => 'Sports'],
             ['name' => 'WILLOW SPORTS', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Willow%20TV.jpeg', 'url' => 'https://tvsen5.aynaott.com/willowhd/tracks-v1a1/mono.ts.m3u8', 'group' => 'Sports'],
             ['name' => 'T Sports HD', 'logo' => 'https://s3.aynaott.com/storage/dbc585f70a60b9855b6e13a8ce4cb6f4', 'url' => 'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=755de1abb34402b6543ac8e82a34488d', 'group' => 'Sports', 'alternates' => [
-                'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1779283784&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=3b4c5a2cfa872fa7f91ffbfb4aa0f658'
+                'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1779283784&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=3b4c5a2cfa872fa7f91ffbfb4aa0f658',
+                'https://t-sports-1-hls.sports24.icu/tsports/index.m3u8',
+                'http://116.58.200.222:8000/play/a05d/index.m3u8'
             ]]
         ];
     }

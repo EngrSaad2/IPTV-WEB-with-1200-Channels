@@ -345,8 +345,17 @@
                                 hls.loadSource(channelUrls[currentUrlIndex]);
                                 hls.startLoad();
                             } else {
-                                console.warn("HLS network error, recovering stream...");
-                                hls.startLoad();
+                                console.error("HLS network error, all alternates failed.");
+                                showToast("Stream unavailable. Links may be expired or geo-blocked.");
+                                document.getElementById('video-quality-selector').style.display = 'none';
+                                hls.destroy();
+                                hls = null;
+                                
+                                const overlay = document.getElementById('video-overlay');
+                                overlay.style.display = 'flex';
+                                const actionBtn = document.getElementById('player-action-btn');
+                                actionBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Stream Unavailable';
+                                actionBtn.onclick = null;
                             }
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
