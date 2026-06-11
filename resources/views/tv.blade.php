@@ -322,7 +322,7 @@
             streamLoadTimeout = setTimeout(() => {
                 console.warn("Stream load timeout triggered.");
                 triggerStreamFailure();
-            }, 8000); // 8s timeout to load
+            }, 3000); // 3s timeout to load
         }
 
         if (Hls.isSupported()) {
