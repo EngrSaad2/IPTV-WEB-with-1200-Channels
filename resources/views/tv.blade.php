@@ -94,6 +94,7 @@
     let wakeLock = null;
     let skipCount = 0;
     const MAX_AUTO_SKIP = 15;
+    let streamLoadTimeout = null;
 
     function safeBtoa(str) {
         try {
@@ -275,18 +276,54 @@
 
         if (hls) {
             hls.destroy();
+            hls = null;
         }
+
+        if (streamLoadTimeout) clearTimeout(streamLoadTimeout);
 
         // Initialize alternate links tracking
         let channelUrls = [channel.url];
         if (channel.alternates && Array.isArray(channel.alternates)) {
             channel.alternates.forEach(alt => {
-                if (alt !== channel.url && !channelUrls.includes(alt)) {
+                if (alt && alt !== channel.url && !channelUrls.includes(alt)) {
                     channelUrls.push(alt);
                 }
             });
         }
+        
+        channelUrls = channelUrls.filter(u => u && u.trim().length > 0);
+        if (channelUrls.length === 0) {
+            return autoSkipToNextChannel();
+        }
+
         let currentUrlIndex = 0;
+
+        function triggerStreamFailure() {
+            if (currentUrlIndex < channelUrls.length - 1) {
+                currentUrlIndex++;
+                console.warn(`Switching to alternate URL index ${currentUrlIndex}`);
+                showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
+                if (hls) {
+                    hls.loadSource(channelUrls[currentUrlIndex]);
+                    hls.startLoad();
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = channelUrls[currentUrlIndex];
+                    video.play();
+                }
+                resetTimeout();
+            } else {
+                console.error("All alternates failed or timed out.");
+                autoSkipToNextChannel();
+            }
+        }
+
+        function resetTimeout() {
+            if (streamLoadTimeout) clearTimeout(streamLoadTimeout);
+            streamLoadTimeout = setTimeout(() => {
+                console.warn("Stream load timeout triggered.");
+                triggerStreamFailure();
+            }, 8000); // 8s timeout to load
+        }
 
         if (Hls.isSupported()) {
             hls = new Hls({
@@ -299,7 +336,7 @@
                 liveSyncPosition: 3,
                 initialLiveManifestSize: 3,
                 liveDurationInfinity: true,
-                abrEwmaDefaultEstimate: 4000000, // Bias initial load estimate to 4 Mbps to favor HD
+                abrEwmaDefaultEstimate: 4000000,
                 abrBandwidthFactor: 0.95,
                 abrBandwidthLimit: 0,
                 testBandwidth: true,
@@ -307,17 +344,18 @@
                     default: {
                         maxTimeToFirstByteMs: 5000,
                         maxLoadTimeMs: 10000,
-                        timeoutRetry: { maxNumRetry: 4, retryDelayMs: 500, maxRetryDelayMs: 4000 },
-                        errorRetry: { maxNumRetry: 3, retryDelayMs: 1000, maxRetryDelayMs: 4000 }
+                        timeoutRetry: { maxNumRetry: 2, retryDelayMs: 500, maxRetryDelayMs: 2000 },
+                        errorRetry: { maxNumRetry: 2, retryDelayMs: 1000, maxRetryDelayMs: 2000 }
                     }
                 }
             });
+            
+            resetTimeout();
             hls.loadSource(channelUrls[currentUrlIndex]);
             hls.attachMedia(video);
             
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 video.play().catch(e => {
-                    // Autoplay blocked fallback
                     document.getElementById('video-overlay').style.display = 'flex';
                     const actionBtn = document.getElementById('player-action-btn');
                     actionBtn.innerHTML = '<i class="bi bi-play-fill"></i> Click to Play';
@@ -325,6 +363,10 @@
                 applyPreferredResolution();
                 buildQualitySelector();
             });
+
+            video.addEventListener('playing', () => {
+                if (streamLoadTimeout) clearTimeout(streamLoadTimeout);
+            }, { once: true });
 
             hls.on(Hls.Events.LEVEL_SWITCHED, (event, data) => {
                 if (hls.autoLevelEnabled) {
@@ -339,53 +381,24 @@
 
             hls.on(Hls.Events.ERROR, (event, data) => {
                 if (data.fatal) {
-                    switch (data.type) {
-                        case Hls.ErrorTypes.NETWORK_ERROR:
-                            if (currentUrlIndex < channelUrls.length - 1) {
-                                currentUrlIndex++;
-                                console.warn(`Switching to alternate URL index ${currentUrlIndex} due to network error.`);
-                                showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
-                                hls.loadSource(channelUrls[currentUrlIndex]);
-                                hls.startLoad();
-                            } else {
-                                console.error("HLS network error, all alternates failed.");
-                                autoSkipToNextChannel();
-                            }
-                            break;
-                        case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.warn("HLS media error, attempting recovery...");
-                            hls.recoverMediaError();
-                            break;
-                        default:
-                            if (currentUrlIndex < channelUrls.length - 1) {
-                                currentUrlIndex++;
-                                console.warn(`Switching to alternate URL index ${currentUrlIndex} due to fatal error.`);
-                                showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
-                                hls.loadSource(channelUrls[currentUrlIndex]);
-                                hls.startLoad();
-                            } else {
-                                console.error("HLS unrecoverable playback error:", data);
-                                autoSkipToNextChannel();
-                            }
-                            break;
+                    if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                        hls.recoverMediaError();
+                    } else {
+                        triggerStreamFailure();
                     }
                 }
             });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Safari fallback
+            resetTimeout();
             video.src = channelUrls[currentUrlIndex];
             video.play();
 
+            video.addEventListener('playing', () => {
+                if (streamLoadTimeout) clearTimeout(streamLoadTimeout);
+            }, { once: true });
+
             video.onerror = () => {
-                if (currentUrlIndex < channelUrls.length - 1) {
-                    currentUrlIndex++;
-                    console.warn(`Safari fallback: switching to alternate URL index ${currentUrlIndex}`);
-                    showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
-                    video.src = channelUrls[currentUrlIndex];
-                    video.play();
-                } else {
-                    autoSkipToNextChannel();
-                }
+                triggerStreamFailure();
             };
         } else {
             showToast("HLS playback not supported on this browser.");
