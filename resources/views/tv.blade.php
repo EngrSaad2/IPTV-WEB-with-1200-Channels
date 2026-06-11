@@ -92,6 +92,8 @@
     let activeChannel = null;
     let hls = null;
     let wakeLock = null;
+    let skipCount = 0;
+    const MAX_AUTO_SKIP = 15;
 
     function safeBtoa(str) {
         try {
@@ -249,7 +251,8 @@
         });
     }
 
-    function playChannel(channel) {
+    function playChannel(channel, isAutoSkip = false) {
+        if (!isAutoSkip) skipCount = 0;
         activeChannel = channel;
         setHeroDetails(channel, true);
         localStorage.setItem('last_watched_channel', channel.name);
@@ -346,16 +349,7 @@
                                 hls.startLoad();
                             } else {
                                 console.error("HLS network error, all alternates failed.");
-                                showToast("Stream unavailable. Links may be expired or geo-blocked.");
-                                document.getElementById('video-quality-selector').style.display = 'none';
-                                hls.destroy();
-                                hls = null;
-                                
-                                const overlay = document.getElementById('video-overlay');
-                                overlay.style.display = 'flex';
-                                const actionBtn = document.getElementById('player-action-btn');
-                                actionBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Stream Unavailable';
-                                actionBtn.onclick = null;
+                                autoSkipToNextChannel();
                             }
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
@@ -371,9 +365,7 @@
                                 hls.startLoad();
                             } else {
                                 console.error("HLS unrecoverable playback error:", data);
-                                showToast("Error playing stream. All links failed.");
-                                document.getElementById('video-quality-selector').style.display = 'none';
-                                hls.destroy();
+                                autoSkipToNextChannel();
                             }
                             break;
                     }
@@ -392,12 +384,51 @@
                     video.src = channelUrls[currentUrlIndex];
                     video.play();
                 } else {
-                    showToast("Error playing stream. All links failed.");
+                    autoSkipToNextChannel();
                 }
             };
         } else {
             showToast("HLS playback not supported on this browser.");
         }
+    }
+
+    function autoSkipToNextChannel() {
+        if (!activeChannel || currentChannels.length <= 1) return haltStream();
+        
+        skipCount++;
+        if (skipCount > MAX_AUTO_SKIP) {
+            showToast("Too many channels failed. Stopping auto-skip.");
+            haltStream();
+            return;
+        }
+
+        const currentIndex = currentChannels.findIndex(c => c.name === activeChannel.name);
+        if (currentIndex !== -1) {
+            let nextIndex = currentIndex + 1;
+            if (nextIndex >= currentChannels.length) {
+                nextIndex = 0; // Wrap around to the beginning
+            }
+            const nextChannel = currentChannels[nextIndex];
+            console.warn(`Auto-skipping to: ${nextChannel.name}`);
+            showToast(`Channel unavailable. Auto-switching to ${nextChannel.name}...`);
+            playChannel(nextChannel, true);
+        } else {
+            haltStream();
+        }
+    }
+    
+    function haltStream() {
+        document.getElementById('video-quality-selector').style.display = 'none';
+        if (hls) {
+            hls.destroy();
+            hls = null;
+        }
+        
+        const overlay = document.getElementById('video-overlay');
+        overlay.style.display = 'flex';
+        const actionBtn = document.getElementById('player-action-btn');
+        actionBtn.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Stream Unavailable';
+        actionBtn.onclick = null;
     }
 
     function startDefaultStream() {
