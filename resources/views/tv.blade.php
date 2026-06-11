@@ -156,7 +156,10 @@
             
             // Auto-play T Sports HD if present, otherwise last watched channel, otherwise first channel
             if (filtered.length > 0) {
-                const tSports = filtered.find(c => c.name.toLowerCase().replace(/[^a-z0-9]/g, '') === 'tsportshd');
+                const tSports = filtered.find(c => {
+                    const norm = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return norm === 'tsports' || norm === 'tsportshd';
+                });
                 if (tSports) {
                     playChannel(tSports);
                 } else {
@@ -271,6 +274,17 @@
             hls.destroy();
         }
 
+        // Initialize alternate links tracking
+        let channelUrls = [channel.url];
+        if (channel.alternates && Array.isArray(channel.alternates)) {
+            channel.alternates.forEach(alt => {
+                if (alt !== channel.url && !channelUrls.includes(alt)) {
+                    channelUrls.push(alt);
+                }
+            });
+        }
+        let currentUrlIndex = 0;
+
         if (Hls.isSupported()) {
             hls = new Hls({
                 enableWorker: true,
@@ -295,7 +309,7 @@
                     }
                 }
             });
-            hls.loadSource(channel.url);
+            hls.loadSource(channelUrls[currentUrlIndex]);
             hls.attachMedia(video);
             
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -324,26 +338,54 @@
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.warn("HLS network error, recovering stream...");
-                            hls.startLoad();
+                            if (currentUrlIndex < channelUrls.length - 1) {
+                                currentUrlIndex++;
+                                console.warn(`Switching to alternate URL index ${currentUrlIndex} due to network error.`);
+                                showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
+                                hls.loadSource(channelUrls[currentUrlIndex]);
+                                hls.startLoad();
+                            } else {
+                                console.warn("HLS network error, recovering stream...");
+                                hls.startLoad();
+                            }
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
                             console.warn("HLS media error, attempting recovery...");
                             hls.recoverMediaError();
                             break;
                         default:
-                            console.error("HLS unrecoverable playback error:", data);
-                            showToast("Error playing stream");
-                            document.getElementById('video-quality-selector').style.display = 'none';
-                            hls.destroy();
+                            if (currentUrlIndex < channelUrls.length - 1) {
+                                currentUrlIndex++;
+                                console.warn(`Switching to alternate URL index ${currentUrlIndex} due to fatal error.`);
+                                showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
+                                hls.loadSource(channelUrls[currentUrlIndex]);
+                                hls.startLoad();
+                            } else {
+                                console.error("HLS unrecoverable playback error:", data);
+                                showToast("Error playing stream. All links failed.");
+                                document.getElementById('video-quality-selector').style.display = 'none';
+                                hls.destroy();
+                            }
                             break;
                     }
                 }
             });
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             // Safari fallback
-            video.src = channel.url;
+            video.src = channelUrls[currentUrlIndex];
             video.play();
+
+            video.onerror = () => {
+                if (currentUrlIndex < channelUrls.length - 1) {
+                    currentUrlIndex++;
+                    console.warn(`Safari fallback: switching to alternate URL index ${currentUrlIndex}`);
+                    showToast(`Stream failed. Trying alternate link ${currentUrlIndex + 1}...`);
+                    video.src = channelUrls[currentUrlIndex];
+                    video.play();
+                } else {
+                    showToast("Error playing stream. All links failed.");
+                }
+            };
         } else {
             showToast("HLS playback not supported on this browser.");
         }
