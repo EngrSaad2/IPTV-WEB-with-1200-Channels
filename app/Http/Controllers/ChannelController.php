@@ -23,24 +23,10 @@ class ChannelController extends Controller
     {
         $cacheKey = "iptv_channels_raw";
         $rawChannels = Cache::remember($cacheKey, 3600, function () {
-            try {
-                $response = $this->adaptiveGet(self::FEED_URL);
-                if ($response->successful()) {
-                    $json = $response->json();
-                    if (!empty($json)) {
-                        return $json;
-                    }
-                }
-            } catch (\Exception $e) {
-                // Fail silently
-            }
-
-            // Fallback to local channels.json
             $localPath = resource_path('json/channels.json');
             if (file_exists($localPath)) {
                 return json_decode(file_get_contents($localPath), true) ?? [];
             }
-
             return [];
         });
 
