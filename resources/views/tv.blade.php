@@ -293,7 +293,7 @@
         
         channelUrls = channelUrls.filter(u => u && u.trim().length > 0);
         if (channelUrls.length === 0) {
-            return autoSkipToNextChannel();
+            return haltStream();
         }
 
         let currentUrlIndex = 0;
@@ -313,7 +313,7 @@
                 resetTimeout();
             } else {
                 console.error("All alternates failed or timed out.");
-                autoSkipToNextChannel();
+                haltStream();
             }
         }
 
@@ -405,37 +405,14 @@
         }
     }
 
-    function autoSkipToNextChannel() {
-        if (!activeChannel || currentChannels.length <= 1) return haltStream();
-        
-        skipCount++;
-        if (skipCount > MAX_AUTO_SKIP) {
-            showToast("Too many channels failed. Stopping auto-skip.");
-            haltStream();
-            return;
-        }
-
-        const currentIndex = currentChannels.findIndex(c => c.name === activeChannel.name);
-        if (currentIndex !== -1) {
-            let nextIndex = currentIndex + 1;
-            if (nextIndex >= currentChannels.length) {
-                nextIndex = 0; // Wrap around to the beginning
-            }
-            const nextChannel = currentChannels[nextIndex];
-            console.warn(`Auto-skipping to: ${nextChannel.name}`);
-            showToast(`Channel unavailable. Auto-switching to ${nextChannel.name}...`);
-            playChannel(nextChannel, true);
-        } else {
-            haltStream();
-        }
-    }
-    
     function haltStream() {
         document.getElementById('video-quality-selector').style.display = 'none';
         if (hls) {
             hls.destroy();
             hls = null;
         }
+        
+        if (streamLoadTimeout) clearTimeout(streamLoadTimeout);
         
         const overlay = document.getElementById('video-overlay');
         overlay.style.display = 'flex';
