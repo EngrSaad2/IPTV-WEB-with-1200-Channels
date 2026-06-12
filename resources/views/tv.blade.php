@@ -148,9 +148,11 @@
             document.getElementById('channels-count').textContent = `${filtered.length} Channels`;
             renderChannels(filtered);
             
-            // Always play first channel (Quran TV) by default instead of last watched
+            // Auto-play last watched channel for the current session (resets on new tab)
+            const lastChannelName = sessionStorage.getItem('last_watched_channel');
             if (filtered.length > 0) {
-                playChannel(filtered[0]);
+                const found = lastChannelName ? filtered.find(c => c.name === lastChannelName) : null;
+                playChannel(found || filtered[0]);
             }
 
         } catch (error) {
@@ -236,7 +238,7 @@
     function playChannel(channel) {
         activeChannel = channel;
         setHeroDetails(channel, true);
-        localStorage.setItem('last_watched_channel', channel.name);
+        sessionStorage.setItem('last_watched_channel', channel.name);
 
         // Highlight in the list
         const rows = document.querySelectorAll('.media-item-row');
