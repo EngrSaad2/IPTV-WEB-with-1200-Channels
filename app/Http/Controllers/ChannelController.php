@@ -44,6 +44,12 @@ class ChannelController extends Controller
                 continue;
             }
 
+            // Skip Sports channels from external feed — only use our curated list
+            $rawGroup = $c['group'] ?? 'Sports';
+            if (strtolower($rawGroup) === 'sports') {
+                continue;
+            }
+
             // Skip duplicate channels if already added by custom lists
             if ($this->isAlreadyAdded($all, $c['name'])) {
                 continue;
@@ -57,7 +63,7 @@ class ChannelController extends Controller
             $all[] = [
                 'name' => $c['name'],
                 'logo' => $logo,
-                'group' => $c['group'] ?? 'Sports',
+                'group' => $rawGroup,
                 'url' => $c['url']
             ];
         }
@@ -390,30 +396,25 @@ class ChannelController extends Controller
     private function getFifaSportsChannels(): array
     {
         return [
-            ['name' => 'T Sports HD', 'logo' => 'https://s3.aynaott.com/storage/dbc585f70a60b9855b6e13a8ce4cb6f4', 'url' => 'http://198.195.239.50:8095/Tsports/index.m3u8', 'group' => 'Sports'],
-            ['name' => 'B TV', 'logo' => 'https://s3.aynaott.com/storage/00da8a07fb26b2fb79359ee535e4c7bc', 'url' => 'https://tvsen6.aynaott.com/btvctg/index.m3u8?e=1779283747&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=9bca925fbdfe526b29d41ab7802348ec', 'group' => 'Sports'],
-            ['name' => 'Somoy TV', 'logo' => 'https://s3.aynaott.com/storage/ece71c1163a377fbe2d93f9d28c34f60', 'url' => 'https://tvsen6.aynaott.com/somoytv/index.m3u8?e=1779283766&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=269246b8a31fb3a656624d71e10e447d', 'group' => 'Sports'],
-            ['name' => 'beIN Sports', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Bein%20Sports%201.jpeg', 'url' => 'http://145.239.5.177:80/559/index.m3u8', 'group' => 'Sports'],
-            ['name' => 'ESPN', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/ESPN.png', 'url' => 'https://tvsen5.aynaott.com/espn/index.m3u8?e=1779283793&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cf2b4cb8b6c96ab86daee4299c792295', 'group' => 'Sports'],
-            ['name' => 'Fox Sports', 'logo' => 'https://s3.aynaott.com/storage/da4282cd107cc3d40efadae488b187e5', 'url' => 'https://tvsen7.aynaott.com/foxsports2/index.m3u8?e=1779283790&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=cbb7f40b4af7be51a91e0629a5ac7238', 'group' => 'Sports'],
             ['name' => 'Sports Legends', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770377900139.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/sportslegends/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Flash Guys HD', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770378074527.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/flashguys/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Sports Range', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380601958.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/sportrange/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Thunder Er', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380791303.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/thunder/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Fighters', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770380942670.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/fighter/playlist.m3u8', 'group' => 'Sports'],
             ['name' => 'Crazy Ex', 'logo' => 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1778085745609.png', 'url' => 'https://nomawnoijl.gpcdn.net/akash/crazy_ex/playlist.m3u8', 'group' => 'Sports'],
-            ['name' => 'PTV Sports', 'logo' => 'https://s3.aynaott.com/storage/9d9d7cbfba5a8ceea648bbd963ad1014', 'url' => 'https://tvsen5.aynaott.com/PtvSports/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=b714d4f0812496defe4be81125c560aa', 'group' => 'Sports'],
+            ['name' => 'Star Sports 1', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/16-by-xfireflix.png', 'url' => 'https://cdn8.zohanayaan.com:1686/hls/star1in.m3u8?md5=o9P8WJ_RKHQ8MPqiysji3Q&expires=1780663217', 'group' => 'Sports'],
+            ['name' => 'PTV Sports', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/20-by-xfireflix.png', 'url' => 'https://cdn6.zohanayaan.com:1686/hls/ptvpk.m3u8?md5=ydVLs9QlWy0nEchqNnRlzQ&expires=1780663218', 'group' => 'Sports'],
+            ['name' => 'Willow HD', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/38-by-xfireflix.png', 'url' => 'https://cdn2.zohanayaan.com:1686/hls/willowusa.m3u8?md5=1W5GmrRPEhQOJcVK8KHEKQ&expires=1780663218', 'group' => 'Sports'],
+            ['name' => 'Ten Sports', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/10-by-xfireflix.png', 'url' => 'https://cdn10.zohanayaan.com:1686/hls/tenspk.m3u8?md5=6BI_mV-_FZxWDQviUZSf9Q&expires=1780663218', 'group' => 'Sports'],
+            ['name' => 'A Sports HD', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/12-by-xfireflix.png', 'url' => 'https://cdn4.zohanayaan.com:1686/hls/asportshd.m3u8?md5=eqNjW0UhvKm8dyizjo3eFg&expires=1780663218', 'group' => 'Sports'],
+            ['name' => 'Sky Sports Cricket', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/9-by-xfireflix.png', 'url' => 'https://cdn5.zohanayaan.com:1686/hls/skyscric.m3u8?md5=ZNA-0cz7I96Hpz5QOq64jQ&expires=1780663218', 'group' => 'Sports'],
+            ['name' => 'Fox Cricket 501 HD', 'logo' => 'https://abusaeeidx.github.io/Tv-Channel-Logo/CricHD/runded/6-by-xfireflix.png', 'url' => 'https://cdn9.zohanayaan.com:1686/hls/fox501.m3u8?md5=GIVLwiHMp94XcXUXk8iCJA&expires=1780663222', 'group' => 'Sports'],
+            ['name' => 'T Sports HD', 'logo' => 'https://s3.aynaott.com/storage/dbc585f70a60b9855b6e13a8ce4cb6f4', 'url' => 'https://tvsen7.aynaott.com/tsports-hd/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=755de1abb34402b6543ac8e82a34488d', 'group' => 'Sports'],
+            ['name' => 'PTV Sports 2', 'logo' => 'https://s3.aynaott.com/storage/9d9d7cbfba5a8ceea648bbd963ad1014', 'url' => 'https://tvsen5.aynaott.com/PtvSports/index.m3u8?e=1780662761&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=b714d4f0812496defe4be81125c560aa', 'group' => 'Sports'],
             ['name' => 'A sports', 'logo' => 'https://s3.aynaott.com/storage/64de30d2df9b2a888cb73f17614a9a8b', 'url' => 'https://tvsen6.aynaott.com/asports/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=79cb2b10ec3a06c91dc483a6f1a04f36', 'group' => 'Sports'],
             ['name' => 'Cricket Gold', 'logo' => 'https://s3.aynaott.com/storage/7d20b575edc4e4b5276faa8c246e72a4', 'url' => 'https://tvsen6.aynaott.com/CricketGold/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=c1ffa5e779430e350c5cc5401c9b9bdc', 'group' => 'Sports'],
             ['name' => 'Willow TV', 'logo' => 'https://s3.aynaott.com/storage/94a778ec3219f7eb54bdf1ee07a95788', 'url' => 'https://tvsen5.aynaott.com/willowhd/index.m3u8?e=1780662762&u=78be6644-0a65-48ec-81a4-089ac65a2619&token=7ff3de9f9a286f0a6df46787e8abd8fb', 'group' => 'Sports'],
             ['name' => 'DD Sports', 'logo' => 'https://s3.aynaott.com/storage/188500190395c4de0e506d518925dcc4', 'url' => 'https://cdn-6.pishow.tv/live/13/master.m3u8', 'group' => 'Sports'],
-            ['name' => 'STAR SPORTS 1', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Star%20Sports%201.png', 'url' => 'https://starsportshindiii.pages.dev/720p.m3u8', 'group' => 'Sports'],
-            ['name' => 'STAR SPORTS SELECT 1', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Star%20Sports%20Select%201%40.jpeg', 'url' => 'http://198.195.239.50:8095/StarSportsSelect1/tracks-v1a1/mono.m3u8', 'group' => 'Sports'],
-            ['name' => 'STAR SPORTS SELECT 2', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Star%20Sports%20Select%202.png', 'url' => 'http://198.195.239.50:8095/StarSportsSelect2/tracks-v1a1/mono.m3u8', 'group' => 'Sports'],
-            ['name' => 'EURO SPORTS', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Eurosport.png', 'url' => 'http://198.195.239.50:8095/Eurosport/index.m3u8', 'group' => 'Sports'],
-            ['name' => 'SONY TEN SPORTS 2', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Sony%20Sports%20Ten%202.png', 'url' => 'http://198.195.239.50:8095/SonyTenSports2/index.m3u8', 'group' => 'Sports'],
-            ['name' => 'SONY TEN SPORTS 5', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Sony%20Sports%20Ten%205.png', 'url' => 'http://198.195.239.50:8095/SonyTenSports5/index.m3u8', 'group' => 'Sports'],
-            ['name' => 'WILLOW SPORTS', 'logo' => 'https://raw.githubusercontent.com/subirkumarpaul/Logo/main/Willow%20TV.jpeg', 'url' => 'https://tvsen5.aynaott.com/willowhd/tracks-v1a1/mono.ts.m3u8', 'group' => 'Sports']
         ];
     }
 
