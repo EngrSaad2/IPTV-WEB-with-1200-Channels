@@ -85,14 +85,16 @@ class ChannelController extends Controller
         foreach ($channels as $item) {
             $nameLower = strtolower($item['name']);
 
-            // Explicit global exclusions matching Kotlin
-            if (str_contains($nameLower, 'bein sports') ||
-                str_contains($nameLower, 'sky sports') ||
-                str_contains($nameLower, 'tnt sports') ||
-                str_contains($nameLower, 'espn') ||
-                str_contains($nameLower, 'fox sports') ||
-                str_contains($nameLower, 'supersport')) {
-                continue;
+            // Explicit global exclusions — skip for sports category (curated list)
+            if ($categoryLower !== 'sports') {
+                if (str_contains($nameLower, 'bein sports') ||
+                    str_contains($nameLower, 'sky sports') ||
+                    str_contains($nameLower, 'tnt sports') ||
+                    str_contains($nameLower, 'espn') ||
+                    str_contains($nameLower, 'fox sports') ||
+                    str_contains($nameLower, 'supersport')) {
+                    continue;
+                }
             }
 
             if ($categoryLower === 'all') {
@@ -210,7 +212,15 @@ class ChannelController extends Controller
                 }
             }
 
-            if ($categoryLower === 'bangladeshi') {
+            if ($categoryLower === 'sports') {
+                if ($groupLower === 'sports') {
+                    $filtered[] = $item;
+                }
+            } elseif ($categoryLower === 'kids') {
+                if ($groupLower === 'kids') {
+                    $filtered[] = $item;
+                }
+            } elseif ($categoryLower === 'bangladeshi') {
                 if ($isBd && !$isIslamic && !$isMovie) {
                     $filtered[] = $item;
                 }

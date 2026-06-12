@@ -129,25 +129,13 @@
         `;
 
         try {
-            // Map web categories to controllers
-            let apiCategory = 'all';
-            if (category === 'bangladeshi') apiCategory = 'bangladeshi';
-            if (category === 'islamic') apiCategory = 'islamic';
-            if (category === 'movies') apiCategory = 'movies';
+            // Map web categories to server-side filters
+            let apiCategory = category;
             if (category === 'news') apiCategory = 'global';
 
             const response = await fetch(`${API_BASE}/channels?category=${apiCategory}`);
             const data = await response.json();
-            
-            // Client-side filtering for sub-categories
             let filtered = data;
-            if (category === 'sports') {
-                filtered = data.filter(c => c.group.toLowerCase().includes('sports') || c.name.toLowerCase().includes('sports') || c.name.toLowerCase().includes('ten'));
-            } else if (category === 'news') {
-                filtered = data.filter(c => c.group.toLowerCase().includes('news') || c.name.toLowerCase().includes('news') || c.name.toLowerCase().includes('al jazeera') || c.name.toLowerCase().includes('cnn'));
-            } else if (category === 'kids') {
-                filtered = data.filter(c => c.name.toLowerCase().includes('kids') || c.name.toLowerCase().includes('cartoon') || c.name.toLowerCase().includes('disney') || c.name.toLowerCase().includes('nickelodeon') || c.group.toLowerCase().includes('kids'));
-            }
 
             currentChannels = filtered;
             document.getElementById('channels-count').textContent = `${filtered.length} Channels`;
