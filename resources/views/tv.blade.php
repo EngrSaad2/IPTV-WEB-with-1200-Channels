@@ -267,7 +267,7 @@
                 maxBufferLength: 30,
                 maxBufferSize: 60 * 1024 * 1024,
                 liveBackBufferLength: 10,
-                abrEwmaDefaultEstimate: 4000000, // Bias initial load estimate to 4 Mbps to favor HD
+                abrEwmaDefaultEstimate: 500000, // Bias initial load estimate to 500 kbps to favor fast startup
                 abrBandwidthFactor: 0.95,
                 abrBandwidthLimit: 0,
                 testBandwidth: true,
