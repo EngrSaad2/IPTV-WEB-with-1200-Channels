@@ -148,11 +148,9 @@
             document.getElementById('channels-count').textContent = `${filtered.length} Channels`;
             renderChannels(filtered);
             
-            // Auto-play last watched channel, or first channel if none saved
-            const lastChannelName = localStorage.getItem('last_watched_channel');
+            // Always play first channel (Quran TV) by default instead of last watched
             if (filtered.length > 0) {
-                const found = lastChannelName ? filtered.find(c => c.name === lastChannelName) : null;
-                playChannel(found || filtered[0]);
+                playChannel(filtered[0]);
             }
 
         } catch (error) {
