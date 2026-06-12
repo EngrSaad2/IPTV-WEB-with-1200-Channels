@@ -4,11 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 class ChannelController extends Controller
 {
-    private const FEED_URL = 'https://raw.githubusercontent.com/foridul422/IPTV-/main/channels.json';
     private const DEFAULT_FALLBACK_LOGO = 'https://tstatic.akash-go.com/cms-ui/images/custom-content/1770377900139.png';
 
     public function index(Request $request)
@@ -22,13 +20,10 @@ class ChannelController extends Controller
     {
         $cacheKey = "iptv_channels_raw";
         $rawChannels = Cache::remember($cacheKey, 3600, function () {
-            try {
-                $response = Http::timeout(15)->get(self::FEED_URL);
-                if ($response->successful()) {
-                    return $response->json();
-                }
-            } catch (\Exception $e) {
-                // Fail silently, cache empty array or fallback
+            $path = resource_path('json/channels.json');
+            if (file_exists($path)) {
+                $json = json_decode(file_get_contents($path), true);
+                return is_array($json) ? $json : [];
             }
             return [];
         });
