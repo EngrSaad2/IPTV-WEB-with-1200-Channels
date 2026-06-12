@@ -293,10 +293,10 @@ class ChannelController extends Controller
             }
         }
 
+        if ($quranTv) $prioritized[] = $quranTv;
         if ($wazTv) $prioritized[] = $wazTv;
         if ($islamicTv) $prioritized[] = $islamicTv;
         if ($peaceTv) $prioritized[] = $peaceTv;
-        if ($quranTv) $prioritized[] = $quranTv;
 
         return array_merge($prioritized, $others);
     }

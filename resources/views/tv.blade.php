@@ -33,13 +33,24 @@
                     </button>
                 </div>
             </div>
+            
+            <!-- Unmute Overlay -->
+            <div id="unmute-overlay" class="unmute-overlay" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                <button class="btn btn-warning rounded-pill px-4 py-2 fw-bold" onclick="unmuteVideo()">
+                    <i class="bi bi-volume-up-fill me-2"></i> Tap to Unmute
+                </button>
+            </div>
         </div>
         
         <!-- Bottom Category Selectors -->
         <div class="categories-container mt-3">
             <h2 class="section-title">Categories</h2>
             <div class="categories-grid">
-                <div class="category-card active" onclick="switchCategory('sports', this)">
+                <div class="category-card" onclick="switchCategory('islamic', this)">
+                    <div class="category-icon"><i class="bi bi-moon-stars-fill"></i></div>
+                    <h3>Islamic</h3>
+                </div>
+                <div class="category-card" onclick="switchCategory('sports', this)">
                     <div class="category-icon"><i class="bi bi-dribbble"></i></div>
                     <h3>Sports</h3>
                 </div>
@@ -54,10 +65,6 @@
                 <div class="category-card" onclick="switchCategory('news', this)">
                     <div class="category-icon"><i class="bi bi-newspaper"></i></div>
                     <h3>News</h3>
-                </div>
-                <div class="category-card" onclick="switchCategory('islamic', this)">
-                    <div class="category-icon"><i class="bi bi-moon-stars-fill"></i></div>
-                    <h3>Islamic</h3>
                 </div>
                 <div class="category-card" onclick="switchCategory('kids', this)">
                     <div class="category-icon"><i class="bi bi-controller"></i></div>
@@ -104,7 +111,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Load default category
         const urlParams = new URLSearchParams(window.location.search);
-        const categoryParam = urlParams.get('category') || 'sports';
+        const categoryParam = urlParams.get('category') || 'islamic';
         
         // Highlight active category tab
         const cards = document.querySelectorAll('.category-card');
@@ -278,10 +285,21 @@
             
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 video.play().catch(e => {
-                    // Autoplay blocked fallback
-                    document.getElementById('video-overlay').style.display = 'flex';
-                    const actionBtn = document.getElementById('player-action-btn');
-                    actionBtn.innerHTML = '<i class="bi bi-play-fill"></i> Click to Play';
+                    // Try muted autoplay first
+                    video.muted = true;
+                    video.play().then(() => {
+                        document.getElementById('unmute-overlay').style.display = 'block';
+                    }).catch(e2 => {
+                        // Completely blocked fallback
+                        document.getElementById('video-overlay').style.display = 'flex';
+                        const actionBtn = document.getElementById('player-action-btn');
+                        actionBtn.innerHTML = '<i class="bi bi-play-fill"></i> Click to Play';
+                        actionBtn.onclick = () => {
+                            video.muted = false;
+                            video.play();
+                            document.getElementById('video-overlay').style.display = 'none';
+                        };
+                    });
                 });
                 applyPreferredResolution();
                 buildQualitySelector();
@@ -321,7 +339,21 @@
         } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             // Safari fallback
             video.src = channel.url;
-            video.play();
+            video.play().catch(e => {
+                video.muted = true;
+                video.play().then(() => {
+                    document.getElementById('unmute-overlay').style.display = 'block';
+                }).catch(e2 => {
+                    document.getElementById('video-overlay').style.display = 'flex';
+                    const actionBtn = document.getElementById('player-action-btn');
+                    actionBtn.innerHTML = '<i class="bi bi-play-fill"></i> Click to Play';
+                    actionBtn.onclick = () => {
+                        video.muted = false;
+                        video.play();
+                        document.getElementById('video-overlay').style.display = 'none';
+                    };
+                });
+            });
         } else {
             showToast("HLS playback not supported on this browser.");
         }
@@ -503,6 +535,12 @@
                 }
             }
         });
+    }
+
+    function unmuteVideo() {
+        const video = document.getElementById('hls-video');
+        video.muted = false;
+        document.getElementById('unmute-overlay').style.display = 'none';
     }
 
     // WakeLock API to keep screen active during streaming
