@@ -2,7 +2,7 @@
     RewriteEngine On
     
     # If the file exists in the public directory, rewrite to serve it
-    RewriteCond %{DOCUMENT_ROOT}/LiveTVweb/public/$1 -f
+    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
     RewriteRule ^(.*)$ public/$1 [L]
     
     # Otherwise, route non-file requests to the root index.php
