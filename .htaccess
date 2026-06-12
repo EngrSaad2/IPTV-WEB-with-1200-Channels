@@ -1,8 +1,9 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # If the file exists in the public directory, rewrite to serve it
-    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+    # Serve static files from public/ (works on both localhost and production)
+    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/LiveTVweb/public/$1 -f
     RewriteRule ^(.*)$ public/$1 [L]
     
     # Otherwise, route non-file requests to the root index.php
