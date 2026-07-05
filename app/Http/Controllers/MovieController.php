@@ -143,17 +143,21 @@ class MovieController extends Controller
                         }
 
                         // Fetch similar movies
-                        $similarResponse = Http::withHeaders($this->getHeaders())
-                            ->retry(3, 100)
-                            ->timeout(10)
-                            ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
-                                'language' => self::LANG,
-                                'page' => 1
-                            ]);
-
                         $similar = [];
-                        if ($similarResponse->successful()) {
-                            $similar = $this->processMovies($similarResponse->json()['results'] ?? []);
+                        try {
+                            $similarResponse = Http::withHeaders($this->getHeaders())
+                                ->retry(3, 100)
+                                ->timeout(10)
+                                ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
+                                    'language' => self::LANG,
+                                    'page' => 1
+                                ]);
+
+                            if ($similarResponse->successful()) {
+                                $similar = $this->processMovies($similarResponse->json()['results'] ?? []);
+                            }
+                        } catch (\Exception $e) {
+                            // Silently ignore similar movies failure so main details still load successfully
                         }
 
                         $detail = [
