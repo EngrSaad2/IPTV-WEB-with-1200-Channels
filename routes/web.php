@@ -40,5 +40,6 @@ Route::prefix('api')->group(function () {
         Route::get('/genre/{genreId}', [MovieController::class, 'byGenre']);
         Route::get('/search', [MovieController::class, 'search']);
         Route::get('/detail/{movieId}', [MovieController::class, 'detail']);
+        Route::get('/sources/{movieId}', [MovieController::class, 'sources']);
     });
 });

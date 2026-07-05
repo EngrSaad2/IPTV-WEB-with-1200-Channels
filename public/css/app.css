@@ -801,6 +801,317 @@ body {
     line-height: 1.6;
 }
 
+/* ── Player Wrapper (overlay host) ─────────────────────────────────── */
+.player-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* ── Watch Movie Button ───────────────────────────────────────────── */
+.btn-watch-movie {
+    background: linear-gradient(135deg, #00C853 0%, #00E676 50%, #69F0AE 100%);
+    border: none;
+    color: #0a1a0f;
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: var(--font-family);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-smooth);
+    box-shadow: 0 4px 20px rgba(0, 200, 83, 0.3);
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-watch-movie::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+}
+
+.btn-watch-movie:hover::before {
+    transform: translateX(100%);
+}
+
+.btn-watch-movie:hover {
+    box-shadow: 0 6px 25px rgba(0, 200, 83, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-watch-movie:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.btn-fav {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* ── Detail Title Row ─────────────────────────────────────────────── */
+.detail-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.detail-title-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* ── Genre Badges ─────────────────────────────────────────────────── */
+.genre-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-family);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    margin-right: 6px;
+}
+
+/* ── Source Selector Bar ──────────────────────────────────────────── */
+.source-selector-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border-glass);
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.source-selector-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    flex-shrink: 0;
+}
+
+.source-selector-left i {
+    font-size: 15px;
+    color: var(--accent-color);
+}
+
+.source-label {
+    white-space: nowrap;
+}
+
+.source-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.source-pill {
+    padding: 7px 18px;
+    border-radius: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.source-pill i {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.source-pill:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: rgba(254, 76, 36, 0.35);
+    transform: translateY(-1px);
+}
+
+.source-pill.active {
+    background: var(--accent-gradient);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(254, 76, 36, 0.35);
+}
+
+.source-pill.active i {
+    opacity: 1;
+}
+
+.source-pill-trailer {
+    border-color: rgba(255, 68, 68, 0.25);
+    color: #ff7b7b;
+}
+
+.source-pill-trailer i {
+    color: #ff4444;
+}
+
+.source-pill-trailer:hover {
+    background-color: rgba(255, 68, 68, 0.1);
+    border-color: rgba(255, 68, 68, 0.45);
+    color: #ff5555;
+}
+
+/* ── Player Loading Overlay ───────────────────────────────────────── */
+.player-loading-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 24px;
+    pointer-events: none;
+}
+
+.player-loading-overlay p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-family);
+    margin: 0;
+}
+
+.player-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Player Error State ───────────────────────────────────────────── */
+.player-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 8px;
+    text-align: center;
+    padding: 40px 32px;
+}
+
+.player-error > i {
+    font-size: 44px;
+    color: rgba(255, 107, 107, 0.8);
+    margin-bottom: 6px;
+}
+
+.player-error h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-family);
+}
+
+.player-error p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-family: var(--font-family);
+    margin: 0;
+}
+
+.player-error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+/* ── Player Empty State ───────────────────────────────────────────── */
+.player-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 15px;
+    font-family: var(--font-family);
+}
+
+.player-empty i {
+    font-size: 40px;
+    opacity: 0.4;
+}
+
+/* ── Player Badge (Source / Trailer indicator) ────────────────────── */
+.player-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-family);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.source-badge {
+    background: rgba(0, 200, 83, 0.15);
+    color: #69F0AE;
+    border: 1px solid rgba(0, 200, 83, 0.3);
+}
+
+.trailer-badge {
+    background: rgba(255, 0, 0, 0.15);
+    color: #FF6B6B;
+    border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
 /* Profile / Settings UI */
 .profile-card {
     background-color: var(--bg-card);

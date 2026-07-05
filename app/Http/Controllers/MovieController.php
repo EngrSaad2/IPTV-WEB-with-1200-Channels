@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SourceResolverService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -80,6 +81,22 @@ class MovieController extends Controller
         });
 
         return response()->json($movies);
+    }
+
+    /**
+     * Resolve playback source URLs for a movie via SourceResolverService.
+     * Completely decoupled from TMDB metadata — only needs the TMDB ID.
+     */
+    public function sources(int $movieId, SourceResolverService $resolver)
+    {
+        $sources = $resolver->resolve($movieId);
+        $timeout = $resolver->getTimeout();
+
+        return response()->json([
+            'tmdb_id' => $movieId,
+            'sources' => $sources,
+            'timeout' => $timeout,
+        ]);
     }
 
     public function detail(int $movieId)
