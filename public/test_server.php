@@ -1,9 +1,24 @@
 <?php
 
-$token = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZGI5ZTg4MGIwOGE5YzJjZDczZjg2OTQ2NDNkYmYxNyIsIm5iZiI6MTc4MDgzMzg4Mi40MjU5OTk5LCJzdWIiOiI2YTI1NWU1YWM4MmFkYWVkZDYxZTVjN2EiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fmB7AdXKUzs3n37Q7oU7arLaqX3TSfnkS1cfU_2SrPY";
-$url = "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1";
+// Include Composer autoloader
+require __DIR__ . '/../vendor/autoload.php';
 
-echo "<h1>Testing TMDB connection from production server</h1>";
+// Include Laravel bootstrap to get application instance
+$app = require __DIR__ . '/../bootstrap/app.php';
+
+// Boot the application
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+echo "<h1>Testing Laravel config values on production server</h1>";
+
+$configToken = config('services.tmdb.read_token');
+$configKey = config('services.tmdb.api_key');
+
+echo "<p>Config Read Token Length: " . strlen($configToken) . "</p>";
+echo "<p>Config API Key: <strong>$configKey</strong></p>";
+
+$token = $configToken ?: "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZGI5ZTg4MGIwOGE5YzJjZDczZjg2OTQ2NDNkYmYxNyIsIm5iZiI6MTc4MDgzMzg4Mi40MjU5OTk5LCJzdWIiOiI2YTI1NWU1YWM4MmFkYWVkZDYxZTVjN2EiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.fmB7AdXKUzs3n37Q7oU7arLaqX3TSfnkS1cfU_2SrPY";
+$url = "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1";
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -29,11 +44,6 @@ if ($response === false) {
     $data = json_decode($response, true);
     if (isset($data['results'])) {
         echo "<p>Successfully fetched " . count($data['results']) . " movies.</p>";
-        echo "<ul>";
-        foreach (array_slice($data['results'], 0, 5) as $movie) {
-            echo "<li>" . htmlspecialchars($movie['title']) . " (Votes: " . $movie['vote_count'] . ")</li>";
-        }
-        echo "</ul>";
     } else {
         echo "<p style='color: red;'>Invalid response format: " . htmlspecialchars(substr($response, 0, 500)) . "</p>";
     }
