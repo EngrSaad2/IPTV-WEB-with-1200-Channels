@@ -70,6 +70,7 @@ class MovieController extends Controller
 
         try {
             $response = Http::withHeaders($this->getHeaders())
+                ->retry(3, 100)
                 ->timeout(10)
                 ->get(self::BASE_URL . '/search/movie', [
                     'query' => $query,
@@ -115,6 +116,7 @@ class MovieController extends Controller
             $detail = null;
             try {
                 $response = Http::withHeaders($this->getHeaders())
+                    ->retry(3, 100)
                     ->timeout(10)
                     ->get(self::BASE_URL . "/movie/{$movieId}", [
                         'append_to_response' => 'videos',
@@ -142,6 +144,7 @@ class MovieController extends Controller
 
                         // Fetch similar movies
                         $similarResponse = Http::withHeaders($this->getHeaders())
+                            ->retry(3, 100)
                             ->timeout(10)
                             ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
                                 'language' => self::LANG,
@@ -201,6 +204,7 @@ class MovieController extends Controller
                 ], $extraParams);
 
                 $response = Http::withHeaders($this->getHeaders())
+                    ->retry(3, 100)
                     ->timeout(10)
                     ->get(self::BASE_URL . $endpoint, $params);
 
