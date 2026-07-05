@@ -64,7 +64,11 @@ class MovieController extends Controller
         }
 
         $cacheKey = 'tmdb_search_' . md5($query);
-        $movies = Cache::remember($cacheKey, 600, function () use ($query) {
+        if (Cache::has($cacheKey)) {
+            return response()->json(Cache::get($cacheKey));
+        }
+
+        try {
             $response = Http::withHeaders($this->getHeaders())
                 ->timeout(10)
                 ->get(self::BASE_URL . '/search/movie', [
@@ -75,12 +79,15 @@ class MovieController extends Controller
 
             if ($response->successful()) {
                 $results = $response->json()['results'] ?? [];
-                return $this->processMovies($results);
+                $movies = $this->processMovies($results);
+                Cache::put($cacheKey, $movies, 600);
+                return response()->json($movies);
             }
-            return [];
-        });
+        } catch (\Exception $e) {
+            // Fail gracefully
+        }
 
-        return response()->json($movies);
+        return response()->json([]);
     }
 
     /**
@@ -102,66 +109,73 @@ class MovieController extends Controller
     public function detail(int $movieId)
     {
         $cacheKey = 'tmdb_movie_detail_' . $movieId;
-        $detail = Cache::remember($cacheKey, 3600, function () use ($movieId) {
-            $response = Http::withHeaders($this->getHeaders())
-                ->timeout(10)
-                ->get(self::BASE_URL . "/movie/{$movieId}", [
-                    'append_to_response' => 'videos',
-                    'language' => self::LANG
-                ]);
-
-            if ($response->successful()) {
-                $movie = $response->json();
-                if ($this->isAdultContent($movie)) {
-                    return null;
-                }
-
-                // Extract trailer key
-                $trailerKey = null;
-                if (!empty($movie['videos']['results'])) {
-                    foreach ($movie['videos']['results'] as $video) {
-                        if (strtolower($video['site']) === 'youtube' && strtolower($video['type']) === 'trailer') {
-                            $trailerKey = $video['key'];
-                            break;
-                        }
-                    }
-                    if (!$trailerKey && !empty($movie['videos']['results'])) {
-                        $trailerKey = $movie['videos']['results'][0]['key'] ?? null;
-                    }
-                }
-
-                // Fetch similar movies
-                $similarResponse = Http::withHeaders($this->getHeaders())
+        if (Cache::has($cacheKey)) {
+            $detail = Cache::get($cacheKey);
+        } else {
+            $detail = null;
+            try {
+                $response = Http::withHeaders($this->getHeaders())
                     ->timeout(10)
-                    ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
-                        'language' => self::LANG,
-                        'page' => 1
+                    ->get(self::BASE_URL . "/movie/{$movieId}", [
+                        'append_to_response' => 'videos',
+                        'language' => self::LANG
                     ]);
 
-                $similar = [];
-                if ($similarResponse->successful()) {
-                    $similar = $this->processMovies($similarResponse->json()['results'] ?? []);
+                if ($response->successful()) {
+                    $movie = $response->json();
+                    if ($this->isAdultContent($movie)) {
+                        $detail = 'adult'; // placeholder to cache adult skip
+                    } else {
+                        // Extract trailer key
+                        $trailerKey = null;
+                        if (!empty($movie['videos']['results'])) {
+                            foreach ($movie['videos']['results'] as $video) {
+                                if (strtolower($video['site']) === 'youtube' && strtolower($video['type']) === 'trailer') {
+                                    $trailerKey = $video['key'];
+                                    break;
+                                }
+                            }
+                            if (!$trailerKey && !empty($movie['videos']['results'])) {
+                                $trailerKey = $movie['videos']['results'][0]['key'] ?? null;
+                            }
+                        }
+
+                        // Fetch similar movies
+                        $similarResponse = Http::withHeaders($this->getHeaders())
+                            ->timeout(10)
+                            ->get(self::BASE_URL . "/movie/{$movieId}/similar", [
+                                'language' => self::LANG,
+                                'page' => 1
+                            ]);
+
+                        $similar = [];
+                        if ($similarResponse->successful()) {
+                            $similar = $this->processMovies($similarResponse->json()['results'] ?? []);
+                        }
+
+                        $detail = [
+                            'id' => $movie['id'],
+                            'title' => $movie['title'] ?? 'Unknown',
+                            'overview' => $movie['overview'] ?? '',
+                            'poster_path' => $movie['poster_path'] ? "https://image.tmdb.org/t/p/w500{$movie['poster_path']}" : null,
+                            'backdrop_path' => $movie['backdrop_path'] ? "https://image.tmdb.org/t/p/w780{$movie['backdrop_path']}" : null,
+                            'release_date' => $movie['release_date'] ?? '',
+                            'release_year' => $movie['release_date'] ? substr($movie['release_date'], 0, 4) : '',
+                            'runtime' => $movie['runtime'] ?? 0,
+                            'vote_average' => round($movie['vote_average'], 1),
+                            'genres' => $movie['genres'] ?? [],
+                            'trailer_key' => $trailerKey,
+                            'similar' => $similar
+                        ];
+                    }
+                    Cache::put($cacheKey, $detail, 3600);
                 }
-
-                return [
-                    'id' => $movie['id'],
-                    'title' => $movie['title'] ?? 'Unknown',
-                    'overview' => $movie['overview'] ?? '',
-                    'poster_path' => $movie['poster_path'] ? "https://image.tmdb.org/t/p/w500{$movie['poster_path']}" : null,
-                    'backdrop_path' => $movie['backdrop_path'] ? "https://image.tmdb.org/t/p/w780{$movie['backdrop_path']}" : null,
-                    'release_date' => $movie['release_date'] ?? '',
-                    'release_year' => $movie['release_date'] ? substr($movie['release_date'], 0, 4) : '',
-                    'runtime' => $movie['runtime'] ?? 0,
-                    'vote_average' => round($movie['vote_average'], 1),
-                    'genres' => $movie['genres'] ?? [],
-                    'trailer_key' => $trailerKey,
-                    'similar' => $similar
-                ];
+            } catch (\Exception $e) {
+                // Fail gracefully
             }
-            return null;
-        });
+        }
 
-        if (!$detail) {
+        if (!$detail || $detail === 'adult') {
             return response()->json(['error' => 'Movie not found or filtered as adult content'], 404);
         }
 
@@ -171,37 +185,48 @@ class MovieController extends Controller
     private function fetchConcurrentPages(string $endpoint, array $extraParams = []): array
     {
         $cacheKey = 'tmdb_' . str_replace('/', '_', $endpoint) . '_' . md5(serialize($extraParams));
-        return Cache::remember($cacheKey, 1800, function () use ($endpoint, $extraParams) {
-            $merged = [];
-            for ($page = 1; $page <= self::PAGES_TO_FETCH; $page++) {
-                try {
-                    $params = array_merge([
-                        'language' => self::LANG,
-                        'page' => $page
-                    ], $extraParams);
+        
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
 
-                    $response = Http::withHeaders($this->getHeaders())
-                        ->timeout(10)
-                        ->get(self::BASE_URL . $endpoint, $params);
+        $merged = [];
+        $hasSuccessfulPage = false;
 
-                    if ($response->successful()) {
-                        $results = $response->json()['results'] ?? [];
-                        $processed = $this->processMovies($results);
-                        $merged = array_merge($merged, $processed);
-                    }
-                } catch (\Exception $e) {
-                    // Fail gracefully for this page
+        for ($page = 1; $page <= self::PAGES_TO_FETCH; $page++) {
+            try {
+                $params = array_merge([
+                    'language' => self::LANG,
+                    'page' => $page
+                ], $extraParams);
+
+                $response = Http::withHeaders($this->getHeaders())
+                    ->timeout(10)
+                    ->get(self::BASE_URL . $endpoint, $params);
+
+                if ($response->successful()) {
+                    $results = $response->json()['results'] ?? [];
+                    $processed = $this->processMovies($results);
+                    $merged = array_merge($merged, $processed);
+                    $hasSuccessfulPage = true;
                 }
+            } catch (\Exception $e) {
+                // Fail gracefully for this page
             }
+        }
 
-            // Remove duplicates by ID
-            $unique = [];
-            foreach ($merged as $m) {
-                $unique[$m['id']] = $m;
-            }
+        // Remove duplicates by ID
+        $unique = [];
+        foreach ($merged as $m) {
+            $unique[$m['id']] = $m;
+        }
+        $result = array_values($unique);
 
-            return array_values($unique);
-        });
+        if ($hasSuccessfulPage && !empty($result)) {
+            Cache::put($cacheKey, $result, 1800);
+        }
+
+        return $result;
     }
 
     private function processMovies(array $results): array
