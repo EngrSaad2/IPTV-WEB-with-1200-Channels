@@ -22,7 +22,7 @@ class MovieController extends Controller
 
     private function getHeaders(): array
     {
-        $token = env('TMDB_READ_TOKEN');
+        $token = config('services.tmdb.read_token');
         return [
             'Authorization' => "Bearer {$token}",
             'Accept' => 'application/json',
