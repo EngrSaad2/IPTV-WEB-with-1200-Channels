@@ -257,6 +257,10 @@ class ChannelController extends Controller
             return $this->prioritizeIslamic($filtered);
         }
 
+        if ($categoryLower === 'bangladeshi') {
+            return $this->prioritizeBangladeshi($filtered);
+        }
+
         if ($categoryLower === 'global') {
             return $this->prioritizeGlobal($filtered);
         }
@@ -271,6 +275,7 @@ class ChannelController extends Controller
     private function prioritizeIslamic(array $channels): array
     {
         $prioritized = [];
+        $saudiQuran = null;
         $wazTv = null;
         $islamicTv = null;
         $peaceTv = null;
@@ -279,7 +284,9 @@ class ChannelController extends Controller
 
         foreach ($channels as $item) {
             $name = strtoupper(trim($item['name']));
-            if ($name === 'WAZ TV' && !$wazTv) {
+            if ($name === 'SAUDI QURAN' && !$saudiQuran) {
+                $saudiQuran = $item;
+            } elseif ($name === 'WAZ TV' && !$wazTv) {
                 $wazTv = $item;
             } elseif ($name === 'ISLAMIC TV' && !$islamicTv) {
                 $islamicTv = $item;
@@ -293,10 +300,31 @@ class ChannelController extends Controller
             }
         }
 
+        if ($saudiQuran) $prioritized[] = $saudiQuran;
         if ($quranTv) $prioritized[] = $quranTv;
         if ($wazTv) $prioritized[] = $wazTv;
         if ($islamicTv) $prioritized[] = $islamicTv;
         if ($peaceTv) $prioritized[] = $peaceTv;
+
+        return array_merge($prioritized, $others);
+    }
+
+    private function prioritizeBangladeshi(array $channels): array
+    {
+        $prioritized = [];
+        $deshTv = null;
+        $others = [];
+
+        foreach ($channels as $item) {
+            $name = strtoupper(trim($item['name']));
+            if ($name === 'DESH TV' && !$deshTv) {
+                $deshTv = $item;
+            } else {
+                $others[] = $item;
+            }
+        }
+
+        if ($deshTv) $prioritized[] = $deshTv;
 
         return array_merge($prioritized, $others);
     }
