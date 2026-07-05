@@ -87,11 +87,14 @@
         const genreContainer = document.getElementById('movie-genres-list');
         genreContainer.innerHTML = '';
         if (movie.genres && movie.genres.length > 0) {
-            movie.genres.forEach(g => {
+            movie.genres.forEach((g, index) => {
                 const badge = document.createElement('span');
                 badge.className = 'genre-badge';
                 badge.textContent = g.name;
                 genreContainer.appendChild(badge);
+                if (index < movie.genres.length - 1) {
+                    genreContainer.appendChild(document.createTextNode(' '));
+                }
             });
         }
 

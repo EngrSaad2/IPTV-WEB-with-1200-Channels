@@ -13,7 +13,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     
     <!-- Custom Style -->
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/app.css') }}?v=1.0.2" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ asset('images/fav.png') }}">
     
     <!-- HLS.js for IPTV Playback -->
