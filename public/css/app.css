@@ -855,6 +855,7 @@ body {
 .btn-fav {
     flex-shrink: 0;
     white-space: nowrap;
+    padding: 10px 20px !important;
 }
 
 /* ── Detail Title Row ─────────────────────────────────────────────── */
