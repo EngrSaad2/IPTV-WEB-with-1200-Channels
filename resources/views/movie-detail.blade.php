@@ -103,16 +103,13 @@
         if (movie.trailer_key) {
             playerContainer.innerHTML = `
                 <iframe class="video-element" id="player-iframe"
-                        src="https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1&mute=0&rel=0&modestbranding=1" 
+                        src="https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1&mute=0&controls=0&showinfo=0&rel=0&iv_load_policy=3" 
                         title="${movie.title} - Trailer" 
                         frameborder="0" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         referrerpolicy="strict-origin-when-cross-origin"
                         allowfullscreen>
                 </iframe>
-                <div class="player-badge trailer-badge">
-                    <i class="bi bi-youtube"></i> Trailer
-                </div>
             `;
         } else if (movie.backdrop_path) {
             playerContainer.innerHTML = `
